@@ -1,6 +1,5 @@
 from openpyxl import Workbook
 import openpyxl
-from striprtf.striprtf import rtf_to_text
 
 class Span:
     def __init__(self, number, length, width, depth, cover_bot=3, cover_top=1.5, cover_side=2, stirrup_size=3, top_bar_size=0,bot_bar_size=0):
@@ -28,18 +27,18 @@ class Rebar:
         self.start_loc = start_loc
         self.end_loc = end_loc
 
+class Stirrups:
+    def __init__(self, a_req, start_loc, end_loc):
+        self.a_req = a_req
+        self.start_loc = start_loc
+        self.end_loc = end_loc
+
 class Search:
     def __init__(self, start_flag, end_flag):
         self.looking = False
         self.defined = False
         self.start_flag = start_flag
         self.end_flag = end_flag
-
-# this func
-def word_to_excel():
-    rtf = "report.rtf"
-    text = rtf_to_text(rtf) 
-    print(text)
 
 
 def get_input_geometry(ws):
@@ -48,7 +47,6 @@ def get_input_geometry(ws):
     shear_reinf_search = Search('12.1 Shear Calculation Envelope','Note: "Ratio" is calculated using paired shear (V) and moment (M) design values resulting in the lowest concrete capacity. For ACI and CSA codes, the lowest value of V*d/M is used.')
 
     row_count = ws.max_row
-    # row_count = 30
     spans = []
 
     for row in ws.iter_rows(min_col=1, max_col=1, max_row = row_count):
@@ -73,12 +71,10 @@ def get_input_geometry(ws):
 
 def look_for_grade_beam_data(cell, search_obj, func):
     if cell.value == search_obj.start_flag:
-        print('\n\n\n look = true \n\n\n')
         search_obj.looking = True
         return
 
     elif cell.value == search_obj.end_flag:
-        print('\n\n\n look = false \n\n\n')
         search_obj.looking = False
         search_obj.defined = True
         return
@@ -94,16 +90,18 @@ def add_span(cell):
 
 def add_long_reinf_criteria(cell,spans):
     if str(cell.value).replace('.','',1).isdigit():
-        current_span = spans[int(cell.value[-1])-1]
+        current_span = spans[int(cell.value)-1]
     
     if str(cell.offset(0,1)) == 'TOP' or str(cell.offset(0,1)) == 'BOT':
-        current_span.rebar.append(Rebar(str(cell.offset(0,1).value),float(cell.offset(0,4).value),float(cell.offset(0,2).value),float(cell.offset(0,3).value)))
+        current_span.rebar = Rebar(str(cell.offset(0,1).value),float(cell.offset(0,4).value),float(cell.offset(0,2).value),float(cell.offset(0,3).value))
         
 # def add_shear_reinf_criteria(cell,spans):
 #     if 'SPAN' in str(cell.value):
-#         current_span = int(cell.value[-1])
+#         prev_area = 0
+#         current_span = spans[int(cell.value[-1])-1]
 #     elif str(cell.value).replace('.','',1).isdigit():
-#         spans[current_span-1].shear_reinf_criteria.append(float(cell.offset(0,1)),float(cell.offset(0,6)))
+#         if float(cell.offset(0,6).value) >= prev_area:
+#         # current_span.shear_reinf_criteria.append(float(cell.offset(0,1)),float(cell.offset(0,6)))
 
 def main():
     file = "report.xlsx"
