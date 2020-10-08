@@ -22,31 +22,32 @@ class Span:
         self.stirrups = None
 
     def get_span_info(self):
-        print('span number:     ', self.number)
-        print('span length:     ', self.length)
-        print('span width:      ', self.width)
-        print('span depth:      ', self.depth)
+        print('\n\nspan number:           ', self.number)
+        print('********************************************************************')
+        print('span length:           ', self.length)
+        print('span width:            ', self.width)
+        print('span depth:            ', self.depth)
         print('\nleft top rebar:')
         if self.lt_rebar == None:
-            print('-')
+            print('  -')
         else:
             self.lt_rebar.get_rebar_info()
 
-        print('center bottom rebar:')
+        print('\ncenter bottom rebar:')
         if self.cb_rebar == None:
-            print('-')
+            print('  -')
         else:
             self.cb_rebar.get_rebar_info()
 
-        print('center top rebar:')
+        print('\ncenter top rebar:')
         if self.ct_rebar == None:
-            print('-')
+            print('  -')
         else:
             self.ct_rebar.get_rebar_info()
 
-        print('right top rebar:')
+        print('\nright top rebar:')
         if self.rt_rebar == None:
-            print('-')
+            print('  -')
         else:
             self.rt_rebar.get_rebar_info()
 
@@ -65,10 +66,10 @@ class Rebar:
         self.bar_size = bar_size
 
     def get_rebar_info(self):
-        print('area required:       ', self.a_req)
-        print('start location:      ', self.start_loc)
-        print('end location:        ', self.end_loc)
-        print('bar size:            ', self.bar_size)
+        print('  area required:       ', self.a_req)
+        print('  start location:      ', self.start_loc)
+        print('  end location:        ', self.end_loc)
+        print('  bar size:            ', self.bar_size)
 
 class Stirrups:
     def __init__(self, a_req, start_loc, end_loc):
