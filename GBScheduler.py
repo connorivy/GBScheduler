@@ -17,6 +17,27 @@ class ParamatersDefinedByUser:
         self.psi_e = psi_e
         self.lam = lam
 
+class RebarElement:
+    def __init__(self, a_required=0, start_loc=100, end_loc=0, start2_loc=0, end2_loc=0, bar_size=0):
+        self.a_required = a_required     
+        self.bar_size = bar_size
+        self.start_loc = start_loc
+        self.end_loc = end_loc
+        self.start2_loc = start2_loc
+        self.end2_loc = end2_loc
+
+    def get_area(self):
+        self.bar_diameter = float(self.bar_size / 8)
+        self.a_provided = float(math.pi * self.bar_diameter**2 / 4 )
+
+    def get_rebar_info(self):
+        self.get_area
+        print('  area required:       ', self.a_required)
+        # print('  area provided:       ', self.a_provided)
+        print('  bar size:            ', self.bar_size)
+        print('  start location:      ', self.start_loc)
+        print('  end location:        ', self.end_loc)
+
 class Span:
     def __init__(self, number, length, width, depth, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
         self.number = number
@@ -29,10 +50,10 @@ class Span:
         self.cover_side = cover_side
         self.top_rebar_req = None
         self.bot_rebar_req = None
-        self.lt_rebar = None
-        self.cb_rebar = None
-        self.ct_rebar = None
-        self.rt_rebar = None
+        self.lt_rebar = RebarElement()
+        self.cb_rebar = RebarElement()
+        self.ct_rebar = RebarElement()
+        self.rt_rebar = RebarElement()
         self.stirrups = None
 
     def get_span_info(self):
@@ -62,7 +83,7 @@ class RebarRequirements:
     def __init__(self, point_loc, selected_area, bar_size=0, yield_strength=60000):
         self.point_loc = [point_loc]
         self.selected_area = [selected_area]
-        self.a_req = 0
+        self.a_required = 0
         self.start_loc = 0
         self.end_loc = 0
         self.bar_size = bar_size
@@ -73,31 +94,14 @@ class RebarRequirements:
         for x in range(len(self.point_loc)):
             print('    ', self.point_loc[x], ', ', self.selected_area[x])
 
-        # print('  area required:       ', self.a_req)
+        # print('  area required:       ', self.a_required)
         # print('  start location:      ', self.start_loc)
         # print('  end location:        ', self.end_loc)
         # print('  bar size:            ', self.bar_size)
 
-class RebarElement:
-    def __init__(self, max_area, min_area, start_loc=0, end_loc=0, bar_size=0):
-        self.max_area = max_area
-        self.min_area = min_area        
-        self.bar_size = bar_size
-        self.start_loc = start_loc
-        self.end_loc = end_loc
-
-    def get_area(self):
-        self.bar_diameter = float(self.bar_size / 8)
-        self.provided_area = float(math.pi * self.bar_diameter**2 / 4 )
-
-    def get_rebar_info(self):
-        print('  bar size:            ', self.bar_size)
-        print('  start location:      ', self.start_loc)
-        print('  end location:        ', self.end_loc)
-
 class Stirrups:
-    def __init__(self, a_req, start_loc, end_loc):
-        self.a_req = a_req
+    def __init__(self, a_required, start_loc, end_loc):
+        self.a_required = a_required
         self.start_loc = start_loc
         self.end_loc = end_loc
 
@@ -191,7 +195,10 @@ def add_long_reinf_criteria(cell,spans,search_obj):
 def optimize_gbs(spans, user_input):
     for current_span in spans:
         # design top bars
-        max_area, min_area = get_areas(current_span)
+        # max_area, min_area = get_areas(current_span)
+
+        rebar_required = current_span.top_rebar_req
+        max_area, min_area = max(rebar_required.selected_area), min(rebar_required.selected_area)
 
         beam_width_no_cover = current_span.width - 2 * current_span.cover_side
         min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
@@ -201,11 +208,48 @@ def optimize_gbs(spans, user_input):
 
         print(max_best_size, min_best_size)
 
-        rebar_required = current_span.top_rebar_req
+
         m = max(rebar_required.selected_area)
         max_indexes = [i for i, j in enumerate(rebar_required.selected_area) if j == m]
         print(max_indexes)
 
+        for index in max_indexes:
+            normalized_location = rebar_required.point_loc[index]
+            area = rebar_required.selected_area[index]
+            start_location = current_span.length * normalized_location
+            print(normalized_location)
+
+            if normalized_location < .33:
+                ###################################################################################################################################
+                # replace the hardcoded 10
+                dl = development_length(10, user_input)
+                ###################################################################################################################################
+                if area > current_span.lt_rebar.a_required:
+                    current_span.lt_rebar.a_required = area
+                if start_location < current_span.lt_rebar.start_loc:
+                    current_span.lt_rebar.start_loc = start_location
+                    if current_span.lt_rebar.end_loc == 0:
+                        current_span.lt_rebar.end_loc = start_location + dl
+                elif start_location > current_span.lt_rebar.start_loc:
+                    current_span.lt_rebar.end_loc = start_location + dl
+
+            if normalized_location < .33:
+                ###################################################################################################################################
+                # replace the hardcoded 10
+                dl = development_length(10, user_input)
+                ###################################################################################################################################
+                if area > current_span.lt_rebar.a_required:
+                    current_span.lt_rebar.a_required = area
+                if start_location < current_span.lt_rebar.start_loc:
+                    current_span.lt_rebar.start_loc = start_location
+                    if current_span.lt_rebar.end_loc == 0:
+                        current_span.lt_rebar.end_loc = start_location + dl
+                elif start_location > current_span.lt_rebar.start_loc:
+                    current_span.lt_rebar.end_loc = start_location + dl
+
+        print('rebar info for span ', current_span.number)
+        current_span.lt_rebar.get_rebar_info()
+        current_span.rt_rebar.get_rebar_info()
 
         # for bar_size in range(6,10):
         #     dl = development_length(bar_size, user_input)
@@ -252,34 +296,6 @@ def optimize_gbs(spans, user_input):
 
     #         print(max_left_top, max_right_top, max_center_top)
 
-
-def get_areas(current_span):
-    max_left_top = 0
-    max_right_top = 0
-    max_center_top = 0
-
-    min_left_top = 100
-    min_right_top = 100
-    min_center_top = 100
-
-    rebar_required = current_span.top_rebar_req
-
-    # get the area of rebar required for each third of the beam
-    for data_point in range(len(rebar_required.point_loc)):
-        if rebar_required.point_loc[data_point] < .33:
-            max_left_top = max(rebar_required.selected_area[data_point], max_left_top)
-            min_left_top = min(rebar_required.selected_area[data_point], min_left_top)
-        elif rebar_required.point_loc[data_point] > .66:
-            max_right_top = max(rebar_required.selected_area[data_point], max_right_top)
-            min_right_top = min(rebar_required.selected_area[data_point], min_right_top)
-        else:
-            max_center_top = max(rebar_required.selected_area[data_point], max_center_top)
-            min_center_top = min(rebar_required.selected_area[data_point], min_center_top)
-
-    max_area = max(max_left_top, max_center_top, max_right_top)
-    min_area = min(min_left_top, min_center_top, min_right_top)
-
-    return max_area, min_area
 
 def get_best_size(area, min_num_bars):
     # set a value for the rebar remainder that will definitely be higher than all other remainder values 
