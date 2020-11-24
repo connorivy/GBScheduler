@@ -22,8 +22,8 @@ def get_input_geometry(ws):
                 # print('looking of rebar')
                 look_for_grade_beam_data(cell, long_reinf_search, add_long_reinf_criteria, spans)
 
-    for x in spans:
-        x.get_span_info()
+    # for x in spans:
+    #     x.get_span_info()
 
     return spans
 

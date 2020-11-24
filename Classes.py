@@ -11,17 +11,17 @@ class ParamatersDefinedByUser:
         self.lam = lam
 
 class RebarElement:
-    def __init__(self, a_required=0, start_loc=100, end_loc=0, start2_loc=0, end2_loc=0, bar_size=0):
+    def __init__(self, a_required=0, start_loc=100, end_loc=0, start_middle_loc=100, end_middle_loc=0, bar_size=0):
         self.a_required = a_required     
         self.bar_size = bar_size
         self.start_loc = start_loc
         self.end_loc = end_loc
-        self.start2_loc = start2_loc
-        self.end2_loc = end2_loc
+        self.start_middle_loc = start_middle_loc
+        self.end_middle_loc = end_middle_loc
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
-        self.a_provided = float(math.pi * self.bar_diameter**2 / 4 )
+        self.a_provided = float(math.pi * self.bar_diameter ** 2 / 4 )
 
     def get_rebar_info(self):
         self.get_area
