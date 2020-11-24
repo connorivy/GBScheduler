@@ -11,13 +11,12 @@ class ParamatersDefinedByUser:
         self.lam = lam
 
 class RebarElement:
-    def __init__(self, a_required=0, start_loc=100, end_loc=0, start_middle_loc=100, end_middle_loc=0, bar_size=0):
+    def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0):
         self.a_required = a_required     
         self.bar_size = bar_size
         self.start_loc = start_loc
         self.end_loc = end_loc
-        self.start_middle_loc = start_middle_loc
-        self.end_middle_loc = end_middle_loc
+        self.num_bars = 0
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
@@ -28,8 +27,22 @@ class RebarElement:
         print('  area required:       ', self.a_required)
         # print('  area provided:       ', self.a_provided)
         print('  bar size:            ', self.bar_size)
+        print('  num of bars:         ', self.num_bars)
         print('  start location:      ', self.start_loc)
         print('  end location:        ', self.end_loc)
+
+    def development_len(self, user_input):
+        bar_diameter = float(self.bar_size / 8)
+
+        # per ACI 318-14 table 25.4.2.2
+        if self.bar_size <= 6:
+            constant = 20
+        else:
+            constant = 25
+        ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
+        
+        # print('development length', ld)
+        return ld
 
 class Span:
     def __init__(self, number, length, width, depth, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
@@ -66,6 +79,36 @@ class Span:
             print('  -')
         else:
             self.bot_rebar_req.get_rebar_req_info()
+
+    def get_best_rebar_sizes(self):
+        beam_width_no_cover = self.width - 2 * self.cover_side
+        min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
+
+        long_reinf = [self.lt_rebar, self.ct_rebar, self.rt_rebar]
+        # print('area', area)
+
+        # loop through all bar sizes to find the most economic size
+        for x in range(0,3):
+             # set a value for the rebar remainder that will definitely be higher than all other remainder values 
+            min_extra_rebar_area = 100
+
+            for bar_num in range(6,12):
+                area = long_reinf[x].a_required
+                bar_area = float(math.pi * float(bar_num / 8)**2 / 4 )
+                num_bars = max(math.ceil(area / bar_area), min_num_bars)
+                # print('info', x, area, bar_num, num_bars)
+
+                extra_rebar_area = num_bars * bar_area - area
+
+                # print('xetra rebar area', extra_rebar_area)
+                if extra_rebar_area < min_extra_rebar_area:
+                    # print('ASSIGN BEST SIZE')
+                    best_size = bar_num
+                    num_best_bars = num_bars
+                    min_extra_rebar_area = extra_rebar_area
+
+            long_reinf[x].bar_size = best_size
+            long_reinf[x].num_bars = num_best_bars
         
     # def effective_depth():
     #     return self.depth -

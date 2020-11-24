@@ -11,23 +11,16 @@ def lineno():
 
 def optimize_gbs(spans, user_input):
     for current_span in spans:
-        # # design top bars
-        # # max_area, min_area = get_areas(current_span)
-
-        # rebar_required = current_span.top_rebar_req
-        # max_area, min_area = max(rebar_required.selected_area), min(rebar_required.selected_area)
-
-        # beam_width_no_cover = current_span.width - 2 * current_span.cover_side
-        # min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
-
-        # max_best_size = get_best_size(max_area, min_num_bars)
-        # min_best_size = get_best_size(min_area, min_num_bars)
-
-        # print(max_best_size, min_best_size)
-
+        # design top bars
         rebar_required = current_span.top_rebar_req
         # returns [max_left_top, max_center_top, max_right_top]
         max_areas = get_areas(current_span)
+
+        # define max sizes and the optimal bar size and number of bars
+        current_span.lt_rebar.a_required = max_areas[0]
+        current_span.ct_rebar.a_required = max_areas[1]
+        current_span.rt_rebar.a_required = max_areas[2]
+        current_span.get_best_rebar_sizes()
 
         lt_max_area_locations = []
         rt_max_area_locations = []
@@ -46,25 +39,24 @@ def optimize_gbs(spans, user_input):
             else:
                 if area == max_areas[1]:
                     ct_max_area_locations.append(normalized_location)
-        
-        dl = development_length(11, user_input)
 
+        len = current_span.length
         if lt_max_area_locations:
-            current_span.lt_rebar.a_required = max_areas[0]
-            current_span.lt_rebar.start_loc = lt_max_area_locations[0]*current_span.length
+            dl = current_span.lt_rebar.development_len(user_input)
+            current_span.lt_rebar.start_loc = max(lt_max_area_locations[0]*current_span.length - dl, 0)
             current_span.lt_rebar.end_loc = lt_max_area_locations[-1]*current_span.length + dl
 
         if ct_max_area_locations:
-            current_span.ct_rebar.a_required = max_areas[1]
+            dl = current_span.ct_rebar.development_len(user_input)
             current_span.ct_rebar.start_loc = ct_max_area_locations[0]*current_span.length - dl
-            current_span.ct_rebar.start_loc = ct_max_area_locations[0]*current_span.length + dl
+            current_span.ct_rebar.end_loc = ct_max_area_locations[0]*current_span.length + dl
 
         if rt_max_area_locations:
-            current_span.rt_rebar.a_required = max_areas[2]
-            current_span.rt_rebar.start_loc = rt_max_area_locations[0]*current_span.length
-            current_span.rt_rebar.end_loc = rt_max_area_locations[-1]*current_span.length + dl
+            dl = current_span.rt_rebar.development_len(user_input)
+            current_span.rt_rebar.start_loc = rt_max_area_locations[0]*current_span.length - dl
+            current_span.rt_rebar.end_loc = min(rt_max_area_locations[-1]*current_span.length + dl, current_span.length)
 
-        print('Span Number ', current_span.number)
+        print('\nSpan Number ', current_span.number)
         current_span.lt_rebar.get_rebar_info()
         current_span.rt_rebar.get_rebar_info()
 
@@ -93,31 +85,6 @@ def get_areas(current_span):
 
     return [max_left_top, max_center_top, max_right_top]
 
-
-def get_best_size(area, min_num_bars):
-    # set a value for the rebar remainder that will definitely be higher than all other remainder values 
-    min_extra_rebar_area = 100
-    # print('area', area)
-
-    # loop through all bar sizes to find the most economic size
-    for x in range(6,10):
-        # print('bar size', x)
-        bar_area = float(math.pi * float(x / 8)**2 / 4 )
-        num_bars = math.ceil(area / bar_area)
-
-        if num_bars < min_num_bars:
-            num_bars = min_num_bars
-
-        extra_rebar_area = num_bars * bar_area - area
-
-        # print('xetra rebar area', extra_rebar_area)
-        if extra_rebar_area < min_extra_rebar_area:
-            # print('ASSIGN BEST SIZE')
-            best_size = x
-            min_extra_rebar_area = extra_rebar_area
-
-    return best_size
-
 def development_length(bar_size, user_input):
     bar_diameter = float(bar_size / 8)
 
@@ -127,8 +94,7 @@ def development_length(bar_size, user_input):
     else:
         constant = 25
     ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
-
-    rounded = math.ceil(ld*2) / 2.0
+    
     # print('development length', ld)
     return ld
 
