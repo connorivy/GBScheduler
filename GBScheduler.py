@@ -13,6 +13,7 @@ def optimize_gbs(spans, user_input):
     for current_span in spans:
         # design top bars
         rebar_required = current_span.top_rebar_req
+
         # returns [max_left_top, max_center_top, max_right_top]
         max_areas = get_areas(current_span)
 
@@ -40,24 +41,28 @@ def optimize_gbs(spans, user_input):
                 if area == max_areas[1]:
                     ct_max_area_locations.append(normalized_location)
 
-        len = current_span.length
+        length = current_span.length
         if lt_max_area_locations:
             dl = current_span.lt_rebar.development_len(user_input)
-            current_span.lt_rebar.start_loc = max(lt_max_area_locations[0]*current_span.length - dl, 0)
-            current_span.lt_rebar.end_loc = lt_max_area_locations[-1]*current_span.length + dl
+            current_span.lt_rebar.start_loc = max(lt_max_area_locations[0]*length - dl, 0)
+            current_span.lt_rebar.end_loc = min(lt_max_area_locations[-1]*length + dl, length)
 
         if ct_max_area_locations:
             dl = current_span.ct_rebar.development_len(user_input)
-            current_span.ct_rebar.start_loc = ct_max_area_locations[0]*current_span.length - dl
-            current_span.ct_rebar.end_loc = ct_max_area_locations[0]*current_span.length + dl
+            current_span.ct_rebar.start_loc = max(ct_max_area_locations[0]*length - dl, 0)
+            current_span.ct_rebar.end_loc = min(ct_max_area_locations[0]*length + dl, length)
 
         if rt_max_area_locations:
             dl = current_span.rt_rebar.development_len(user_input)
-            current_span.rt_rebar.start_loc = rt_max_area_locations[0]*current_span.length - dl
-            current_span.rt_rebar.end_loc = min(rt_max_area_locations[-1]*current_span.length + dl, current_span.length)
+            current_span.rt_rebar.start_loc = max(rt_max_area_locations[0]*length - dl, 0)
+            current_span.rt_rebar.end_loc = min(rt_max_area_locations[-1]*length + dl, length)
 
         print('\nSpan Number ', current_span.number)
+        print('  left top')
         current_span.lt_rebar.get_rebar_info()
+        print('\n  center top')
+        current_span.ct_rebar.get_rebar_info()
+        print('\n  right top')
         current_span.rt_rebar.get_rebar_info()
 
 def get_areas(current_span):
@@ -93,6 +98,8 @@ def development_length(bar_size, user_input):
         constant = 20
     else:
         constant = 25
+
+    # clovis multiplied development length by 1.3 and I'm not sure why.
     ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
     
     # print('development length', ld)
