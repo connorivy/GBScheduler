@@ -20,12 +20,12 @@ class RebarElement:
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
-        self.a_provided = float(math.pi * self.bar_diameter ** 2 / 4 )
+        self.a_provided = float(math.pi * self.bar_diameter ** 2 / 4 ) * self.num_bars
 
     def get_rebar_info(self):
-        self.get_area
+        self.get_area()
         print('  area required:       ', self.a_required)
-        # print('  area provided:       ', self.a_provided)
+        print('  area provided:       ', round(self.a_provided,2))
         print('  bar size:            ', self.bar_size)
         print('  num of bars:         ', self.num_bars)
         print('  start location:      ', self.start_loc)
