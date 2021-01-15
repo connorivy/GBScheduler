@@ -27,6 +27,7 @@ def get_input_geometry(ws):
 
     return spans
 
+
 def look_for_grade_beam_data(cell, search_obj, func, spans):
     if cell.value == search_obj.start_flag:
         search_obj.looking = True
@@ -80,3 +81,56 @@ def add_long_reinf_criteria(cell,spans,search_obj):
             else:
                 search_obj.current_span.top_rebar_req.point_loc.append(round(float(cell.value),2))
                 search_obj.current_span.top_rebar_req.selected_area.append(round(float(cell.offset(0,6).value),2))
+
+def define_spans(wb):
+    # open the '(2)' tab in the excel sheet and extract the data for each span
+    ws = wb.sheet_by_name('(2)')
+
+    # loop over the second column. Once you find 'Span' then start looking for non-empy cells
+    # note you cant just look for numbers because cantalievers are given by 'C'
+
+    spans = []
+    start_flag = 'span'
+    end_flag = '2.7 Support Width and Column Data'
+    create_spans = False
+
+    for row in range(ws.nrows):
+        # look in the first column bc the 0th column is blank
+        cell = ws.cell(row,1)
+        value = str(cell.value)
+
+        # if cell value == start falg then start looking for nums 
+        if str(cell.value).lower() == start_flag.lower():
+            create_spans = True
+        # if cell value == end flag then stop looking
+        if str(cell.value).lower() == end_flag.lower():
+            break
+
+        if create_spans:
+            # if the value is not empty, just spaces, or the start flag
+            if value != '' and not value.isspace() and value.lower() != start_flag.lower():
+                print('we made it through', value)
+                # if the value is not a number then its a cantilever
+                if not is_num(value):
+                    if spans == []:
+                        value = 'CL'
+                    else:
+                        value = 'CR'
+                # returns span object with the following attributes
+                # span number (or CR / CL if cantilever), length, width, depth
+                spans.append(Span(value, float(ws.cell(row,3).value), float(ws.cell(row,4).value), float(ws.cell(row,5).value)))
+
+    for x in spans:
+        x.get_span_info()
+
+    return spans
+
+def get_input_geometry(wb):
+    spans = []
+
+def is_num(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False

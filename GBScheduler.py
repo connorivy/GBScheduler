@@ -1,7 +1,8 @@
 from openpyxl import Workbook
+import xlrd
 import openpyxl
 from Classes import ParamatersDefinedByUser
-from create_spans import get_input_geometry
+from create_spans import define_spans
 import inspect
 import math
 
@@ -46,19 +47,19 @@ def optimize_gbs(spans, user_input):
         # also normalize that length so it can be subtracted from the overall list of areas
         length = current_span.length
         if lt_max_area_locations:
-            dl = current_span.lt_rebar.development_len(user_input)
-            current_span.lt_rebar.start_loc = round_down(max(lt_max_area_locations[0]*length - dl, 0) / length)
-            current_span.lt_rebar.end_loc = round_up(min(lt_max_area_locations[-1]*length + dl, length) / length)
+            dl = current_span.lt_rebar.development_len(user_input) / length
+            current_span.lt_rebar.start_loc = round_down(max(lt_max_area_locations[0] - dl, 0))
+            current_span.lt_rebar.end_loc = round_up(min(lt_max_area_locations[-1] + dl, 1))
 
         if ct_max_area_locations:
-            dl = current_span.ct_rebar.development_len(user_input)
-            current_span.ct_rebar.start_loc = round_down(max(ct_max_area_locations[0]*length - dl, 0) / length)
-            current_span.ct_rebar.end_loc = round_up(min(ct_max_area_locations[0]*length + dl, length) / length)
+            dl = current_span.ct_rebar.development_len(user_input) / length
+            current_span.ct_rebar.start_loc = round_down(max(ct_max_area_locations[0] - dl, 0))
+            current_span.ct_rebar.end_loc = round_up(min(ct_max_area_locations[0] + dl, 1))
 
         if rt_max_area_locations:
-            dl = current_span.rt_rebar.development_len(user_input)
-            current_span.rt_rebar.start_loc = round_down(max(rt_max_area_locations[0]*length - dl, 0) / length)
-            current_span.rt_rebar.end_loc = round_up(min(rt_max_area_locations[-1]*length + dl, length) / length)
+            dl = current_span.rt_rebar.development_len(user_input) / length
+            current_span.rt_rebar.start_loc = round_down(max(rt_max_area_locations[0] - dl, 0))
+            current_span.rt_rebar.end_loc = round_up(min(rt_max_area_locations[-1] + dl, 1))
 
         print('\nSpan Number ', current_span.number)
         print('  left top')
@@ -75,17 +76,17 @@ def optimize_gbs(spans, user_input):
 # but I'm trying to subtract the rebar areas that my code gives from those that ADAPT gives
 ###############################################################################################################################################################
 
-# def adjust_req_rebar(current_span, rebar_element):
-#     # lengths = [.02, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, .98]
+def adjust_req_rebar(current_span, rebar_element):
+    # lengths = [.02, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, .98]
 
-#     if rebar_element.start_loc == 0 and current_span.top_rebar_req.point_loc[0] < .05:
-#         current_span.top_rebar_req.point_loc[0]
+    if rebar_element.start_loc == 0 and current_span.top_rebar_req.point_loc[0] < .05:
+        current_span.top_rebar_req.point_loc[0]
 
-#     for dist in range(0,len(span.top_rebar_req.point_loc)):
-#         print('point location = ', span.top_rebar_req.point_loc[dist])
-#         print('selected_area = ', span.top_rebar_req.selected_area[dist])
+    for dist in range(0,len(span.top_rebar_req.point_loc)):
+        print('point location = ', span.top_rebar_req.point_loc[dist])
+        print('selected_area = ', span.top_rebar_req.selected_area[dist])
 
-#         span.top_rebar_req.point_loc[dist]
+        span.top_rebar_req.point_loc[dist]
 
 def get_areas(current_span):
     max_left_top = 0
@@ -135,13 +136,13 @@ def round_down(num):
 
     
 def main():
-    file = "report.xlsx"
-    wb = openpyxl.load_workbook(file)
-    ws = wb.active
+    file = "helper_files/report2.xls"
+    # wb = openpyxl.load_workbook(file)
+    wb = xlrd.open_workbook(file)
 
     user_input = ParamatersDefinedByUser(4000, 60000, 1, 1, 1)
-    spans = get_input_geometry(ws)
-    optimize_gbs(spans, user_input)
+    spans = define_spans(wb)
+    # optimize_gbs(spans, user_input)
 
 main()
 
