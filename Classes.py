@@ -12,7 +12,7 @@ class ParamatersDefinedByUser:
 
 class RebarElement:
     def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0):
-        self.a_required = a_required     
+        self.a_required = a_required
         self.bar_size = bar_size
         self.start_loc = start_loc
         self.end_loc = end_loc
@@ -56,6 +56,9 @@ class Span:
         self.cover_side = cover_side
         self.top_rebar_req = []
         self.bot_rebar_req = []
+        self.original_top_rebar_req = []
+        self.original_bot_rebar_req = []
+        self.top_rebar_elements = []
         self.lt_rebar = RebarElement()
         self.cb_rebar = RebarElement()
         self.ct_rebar = RebarElement()
@@ -85,35 +88,10 @@ class Span:
         for x in range(len(topbot)):
             print('    ', topbot[x][0], ', ', topbot[x][1])
 
-    def get_best_rebar_sizes(self):
+    def get_min_num_bars(self):
         beam_width_no_cover = self.width - 2 * self.cover_side
-        min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
+        self.min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
 
-        long_reinf = [self.lt_rebar, self.ct_rebar, self.rt_rebar]
-        # print('area', area)
-
-        # loop through all bar sizes to find the most economic size
-        for x in range(0,3):
-             # set a value for the rebar remainder that will definitely be higher than all other remainder values 
-            min_extra_rebar_area = 100
-
-            for bar_num in range(6,12):
-                area = long_reinf[x].a_required
-                bar_area = float(math.pi * float(bar_num / 8)**2 / 4 )
-                num_bars = max(math.ceil(area / bar_area), min_num_bars)
-                # print('info', x, area, bar_num, num_bars)
-
-                extra_rebar_area = num_bars * bar_area - area
-
-                # print('xetra rebar area', extra_rebar_area)
-                if extra_rebar_area < min_extra_rebar_area:
-                    # print('ASSIGN BEST SIZE')
-                    best_size = bar_num
-                    num_best_bars = num_bars
-                    min_extra_rebar_area = extra_rebar_area
-
-            long_reinf[x].bar_size = best_size
-            long_reinf[x].num_bars = num_best_bars
         
     # def effective_depth():
     #     return self.depth -
