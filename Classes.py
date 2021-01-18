@@ -54,8 +54,8 @@ class Span:
         self.cover_bot = cover_bot
         self.cover_top = cover_top
         self.cover_side = cover_side
-        self.top_rebar_req = None
-        self.bot_rebar_req = None
+        self.top_rebar_req = []
+        self.bot_rebar_req = []
         self.lt_rebar = RebarElement()
         self.cb_rebar = RebarElement()
         self.ct_rebar = RebarElement()
@@ -69,16 +69,21 @@ class Span:
         print('span width:            ', self.width)
         print('span depth:            ', self.depth)
         print('\ntop rebar:')
-        if self.top_rebar_req == None:
+        if self.top_rebar_req == []:
             print('  -')
         else:
-            self.top_rebar_req.get_rebar_req_info()
+            self.get_rebar_req_info(self.top_rebar_req)
 
         print('\nbottom rebar:')
-        if self.bot_rebar_req == None:
+        if self.bot_rebar_req == []:
             print('  -')
         else:
-            self.bot_rebar_req.get_rebar_req_info()
+            self.get_rebar_req_info(self.bot_rebar_req)
+
+    def get_rebar_req_info(self, topbot):
+        print('  location, selected_area')
+        for x in range(len(topbot)):
+            print('    ', topbot[x][0], ', ', topbot[x][1])
 
     def get_best_rebar_sizes(self):
         beam_width_no_cover = self.width - 2 * self.cover_side
@@ -114,26 +119,6 @@ class Span:
     #     return self.depth -
     
     # def max_shear_spacing():
-
-class RebarRequirements:
-    def __init__(self, point_loc, selected_area, bar_size=0, yield_strength=60000):
-        self.point_loc = [point_loc]
-        self.selected_area = [selected_area]
-        self.a_required = 0
-        self.start_loc = 0
-        self.end_loc = 0
-        self.bar_size = bar_size
-        self.yield_strength = yield_strength
-
-    def get_rebar_req_info(self):
-        print('  location, selected_area')
-        for x in range(len(self.point_loc)):
-            print('    ', self.point_loc[x], ', ', self.selected_area[x])
-
-        # print('  area required:       ', self.a_required)
-        # print('  start location:      ', self.start_loc)
-        # print('  end location:        ', self.end_loc)
-        # print('  bar size:            ', self.bar_size)
 
 class Stirrups:
     def __init__(self, a_required, start_loc, end_loc):

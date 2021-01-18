@@ -3,6 +3,7 @@ import xlrd
 import openpyxl
 from Classes import ParamatersDefinedByUser
 from create_spans import define_spans
+from create_spans import define_long_rebar
 import inspect
 import math
 
@@ -13,11 +14,12 @@ def lineno():
 def optimize_gbs(spans, user_input):
     for current_span in spans:
         # design top bars
-        rebar_required = current_span.top_rebar_req
+        top_rebar_required = current_span.top_rebar_req
         # print(current_span.top_rebar_req.get_rebar_req_info())
 
         # returns [max_left_top, max_center_top, max_right_top]
         max_areas = get_areas(current_span)
+        # print(max_areas)
 
         # define max sizes and the optimal bar size and number of bars
         current_span.lt_rebar.a_required = max_areas[0]
@@ -29,9 +31,9 @@ def optimize_gbs(spans, user_input):
         lt_max_area_locations = []
         rt_max_area_locations = []
         ct_max_area_locations = []
-        for index in range(len(rebar_required.selected_area)):
-            normalized_location = rebar_required.point_loc[index]
-            area = rebar_required.selected_area[index]
+        for index in range(len(top_rebar_required)):
+            normalized_location = top_rebar_required[index][0]
+            area = top_rebar_required[index][1]
 
             if normalized_location < .33:
                 if area == max_areas[0]:
@@ -76,17 +78,17 @@ def optimize_gbs(spans, user_input):
 # but I'm trying to subtract the rebar areas that my code gives from those that ADAPT gives
 ###############################################################################################################################################################
 
-def adjust_req_rebar(current_span, rebar_element):
-    # lengths = [.02, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, .98]
+# def adjust_req_rebar(current_span, rebar_element):
+#     # lengths = [.02, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, .98]
 
-    if rebar_element.start_loc == 0 and current_span.top_rebar_req.point_loc[0] < .05:
-        current_span.top_rebar_req.point_loc[0]
+#     if rebar_element.start_loc == 0 and current_span.top_rebar_req.point_loc[0] < .05:
+#         current_span.top_rebar_req.point_loc[0]
 
-    for dist in range(0,len(span.top_rebar_req.point_loc)):
-        print('point location = ', span.top_rebar_req.point_loc[dist])
-        print('selected_area = ', span.top_rebar_req.selected_area[dist])
+#     for dist in range(0,len(span.top_rebar_req.point_loc)):
+#         print('point location = ', span.top_rebar_req.point_loc[dist])
+#         print('selected_area = ', span.top_rebar_req.selected_area[dist])
 
-        span.top_rebar_req.point_loc[dist]
+#         span.top_rebar_req.point_loc[dist]
 
 def get_areas(current_span):
     max_left_top = 0
@@ -97,19 +99,19 @@ def get_areas(current_span):
     min_right_top = 100
     min_center_top = 100
 
-    rebar_required = current_span.top_rebar_req
+    top_rebar_required = current_span.top_rebar_req
 
     # get the area of rebar required for each third of the beam
-    for data_point in range(len(rebar_required.point_loc)):
-        if rebar_required.point_loc[data_point] < .33:
-            max_left_top = max(rebar_required.selected_area[data_point], max_left_top)
-            min_left_top = min(rebar_required.selected_area[data_point], min_left_top)
-        elif rebar_required.point_loc[data_point] > .66:
-            max_right_top = max(rebar_required.selected_area[data_point], max_right_top)
-            min_right_top = min(rebar_required.selected_area[data_point], min_right_top)
+    for data_point in range(len(top_rebar_required)):
+        if top_rebar_required[data_point][0] < .33:
+            max_left_top = max(top_rebar_required[data_point][1], max_left_top)
+            min_left_top = min(top_rebar_required[data_point][1], min_left_top)
+        elif top_rebar_required[data_point][0] > .66:
+            max_right_top = max(top_rebar_required[data_point][1], max_right_top)
+            min_right_top = min(top_rebar_required[data_point][1], min_right_top)
         else:
-            max_center_top = max(rebar_required.selected_area[data_point], max_center_top)
-            min_center_top = min(rebar_required.selected_area[data_point], min_center_top)
+            max_center_top = max(top_rebar_required[data_point][1], max_center_top)
+            min_center_top = min(top_rebar_required[data_point][1], min_center_top)
 
     return [max_left_top, max_center_top, max_right_top]
 
@@ -136,13 +138,17 @@ def round_down(num):
 
     
 def main():
-    file = "helper_files/report2.xls"
-    # wb = openpyxl.load_workbook(file)
+    file = "helper_files/report - DONT USE.xls"
     wb = xlrd.open_workbook(file)
 
     user_input = ParamatersDefinedByUser(4000, 60000, 1, 1, 1)
     spans = define_spans(wb)
-    # optimize_gbs(spans, user_input)
+    define_long_rebar(wb, spans)
+
+    # for x in spans:
+    #     x.get_span_info()
+
+    optimize_gbs(spans, user_input)
 
 main()
 
