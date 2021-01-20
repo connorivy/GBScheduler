@@ -1,6 +1,5 @@
 from Classes import Span
 from Classes import RebarElement
-from Classes import Search
 
 def define_spans(wb):
     # open the '(2)' tab in the excel sheet and extract the data for each span

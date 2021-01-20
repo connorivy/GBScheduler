@@ -2,6 +2,7 @@ from openpyxl import Workbook
 import xlrd
 import openpyxl
 from Classes import ParamatersDefinedByUser
+from Classes import RebarElement
 from create_spans import define_spans
 from create_spans import define_long_rebar
 from create_spans import finalize_spans
@@ -14,31 +15,30 @@ def lineno():
 
 def reinf_for_max_area(spans, user_input):
     for current_span in spans:
-        # returns [[[max_left_top location, max_top_left area],[max_left_top location, max_top_left area], [[max_center_top]], [[max_right_top]]]
+        # returns 2d list [[max_left_top location, max_top_left area],[max_left_top location, max_top_left area], [[max_center_top]], [[max_right_top]]
         left_max_area, center_max_area, right_max_area = get_max_area(current_span)
-        print('max areas', left_max_area)
+        # print('max areas', left_max_area, center_max_area, right_max_area)
 
-        # assign the length of the reinforcement to go from the first instance of max area - dl to last instance of the max area location plus the developement length
-        # also normalize that length so it can be subtracted from the overall list of areas
-        length = current_span.length
-        if left_max_area[0][1]:
-            dl = current_span.lt_rebar.development_len(user_input) / length
-            current_span.lt_rebar.start_loc = round_down(max(lt_max_area_locations[0] - dl, 0))
-            current_span.lt_rebar.end_loc = round_up(min(lt_max_area_locations[-1] + dl, 1))
+        # assign rebar in order
+        # returns 3d list
+        max_areas_and_locations = order_max_areas(left_max_area, center_max_area, right_max_area)
+        # print('sorted max areas', max_areas)
 
-        if ct_max_area_locations:
-            dl = current_span.ct_rebar.development_len(user_input) / length
-            current_span.ct_rebar.start_loc = round_down(max(ct_max_area_locations[0] - dl, 0))
-            current_span.ct_rebar.end_loc = round_up(min(ct_max_area_locations[-1] + dl, 1))
+        for area_and_locations in max_areas_and_locations:
+            max_area = area_and_locations[0][1]
 
-        if rt_max_area_locations:
-            dl = current_span.rt_rebar.development_len(user_input) / length
-            current_span.rt_rebar.start_loc = round_down(max(rt_max_area_locations[0] - dl, 0))
-            current_span.rt_rebar.end_loc = round_up(min(rt_max_area_locations[-1] + dl, 1))
+            if max_area == 0:
+                continue
+            else:
+                bar_size , num_bars = get_best_rebar_sizes(current_span, max_area)
+                length = current_span.length
+                dl = development_len(bar_size, user_input) / length
 
-################################################################################################################################################################################################
-################################################################################################################################################################################################
-# I left off working on the above code. My development length function needs to be updated because I'm no longer storing data where it is trying to reference it
+                start_loc = round_down(max(area_and_locations[0][0] - dl, 0))
+                end_loc = round_up(min(area_and_locations[-1][0] + dl, 1))
+                current_span.top_rebar_elements.append(RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars))
+                a_provided = current_span.top_rebar_elements[-1].get_area()
+                # current_span.top_rebar_elements[-1].get_rebar_info()
 
 def get_max_area(current_span):
     # design top bars
@@ -90,95 +90,59 @@ def split_list_into_thirds(list2d):
     # print(out)
     return out
 
-    def development_len(self, user_input):
-        bar_diameter = float(self.bar_size / 8)
+def development_len(bar_size, user_input):
+    bar_diameter = float(bar_size / 8)
 
-        # per ACI 318-14 table 25.4.2.2
-        if self.bar_size <= 6:
-            constant = 20
+    # per ACI 318-14 table 25.4.2.2
+    if bar_size <= 6:
+        constant = 20
+    else:
+        constant = 25
+
+    # I need to ask clovis where this 1.3 comes from
+    ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
+    
+    # print('development length', ld)
+    return ld
+
+def order_max_areas(left, center, right):
+    # left center and right are 2d lists
+    # put left center and right in order of greatest area required to least area required
+    max_areas = []
+    for x in range(3):
+        if left[0][1] >= center[0][1] and left[0][1] >= right[0][1]:
+            max_areas.append(left)
+            left = [[0,-5]]
+        elif center[0][1] >= left[0][1] and center[0][1] >= right[0][1]:
+            max_areas.append(center)
+            center = [[0,-3]]
         else:
-            constant = 25
-        ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
-        
-        # print('development length', ld)
-        return ld
+            max_areas.append(right)
+            right = [[0,-1]]
 
-# def optimize_gbs(spans, user_input):
-#     for current_span in spans:
-#         # design top bars
-#         top_rebar_required = current_span.top_rebar_req
+    return max_areas
 
-#         # returns [max_left_top, max_center_top, max_right_top]
-#         max_areas = get_areas(current_span)
 
-#         # define max sizes and the optimal bar size and number of bars
-#         current_span.lt_rebar.a_required = max_areas[0]
-#         current_span.ct_rebar.a_required = max_areas[1]
-#         current_span.rt_rebar.a_required = max_areas[2]
-#         current_span.get_best_rebar_sizes()
+def get_best_rebar_sizes(current_span, area):
+    current_span.get_min_num_bars()
+    min_num_bars = current_span.min_num_bars
+    min_extra_rebar_area = 100
 
-#         # get all locations along each third of the beam in which the max area will be found
-#         lt_max_area_locations = []
-#         rt_max_area_locations = []
-#         ct_max_area_locations = []
-#         for index in range(len(top_rebar_required)):
-#             normalized_location = top_rebar_required[index][0]
-#             area = top_rebar_required[index][1]
+    for bar_num in range(6,12):
+        bar_area = float(math.pi * float(bar_num / 8)**2 / 4 )
+        num_bars = max(math.ceil(area / bar_area), min_num_bars)
+        # print('info', x, area, bar_num, num_bars)
 
-#             if normalized_location < .33:
-#                 if area == max_areas[0]:
-#                     lt_max_area_locations.append(normalized_location)
-#             elif normalized_location > .66:
-#                 if area == max_areas[2]:
-#                     rt_max_area_locations.append(normalized_location)
-#             else:
-#                 if area == max_areas[1]:
-#                     ct_max_area_locations.append(normalized_location)
+        extra_rebar_area = num_bars * bar_area - area
 
-#         # assign the length of the reinforcement to go from the first instance of max area - dl to last instance of the max area location plus the developement length
-#         # also normalize that length so it can be subtracted from the overall list of areas
-#         length = current_span.length
-#         if lt_max_area_locations:
-#             dl = current_span.lt_rebar.development_len(user_input) / length
-#             current_span.lt_rebar.start_loc = round_down(max(lt_max_area_locations[0] - dl, 0))
-#             current_span.lt_rebar.end_loc = round_up(min(lt_max_area_locations[-1] + dl, 1))
+        # print('xetra rebar area', extra_rebar_area)
+        if extra_rebar_area < min_extra_rebar_area:
+            # print('ASSIGN BEST SIZE')
+            best_size = bar_num
+            num_best_bars = num_bars
+            min_extra_rebar_area = extra_rebar_area
 
-#         if ct_max_area_locations:
-#             dl = current_span.ct_rebar.development_len(user_input) / length
-#             current_span.ct_rebar.start_loc = round_down(max(ct_max_area_locations[0] - dl, 0))
-#             current_span.ct_rebar.end_loc = round_up(min(ct_max_area_locations[-1] + dl, 1))
-
-#         if rt_max_area_locations:
-#             dl = current_span.rt_rebar.development_len(user_input) / length
-#             current_span.rt_rebar.start_loc = round_down(max(rt_max_area_locations[0] - dl, 0))
-#             current_span.rt_rebar.end_loc = round_up(min(rt_max_area_locations[-1] + dl, 1))
-
-#         print('\nSpan Number ', current_span.number)
-#         print('  left top')
-#         current_span.lt_rebar.get_rebar_info()
-#         print('\n  center top')
-#         current_span.ct_rebar.get_rebar_info()
-#         print('\n  right top')
-#         current_span.rt_rebar.get_rebar_info()
-
-        # adjust_req_rebar(current_span)
-
-###############################################################################################################################################################
-# I left off working on this. I'm thinking about changing the lists into a dictionary bc I definitely should have done that in the first place
-# but I'm trying to subtract the rebar areas that my code gives from those that ADAPT gives
-###############################################################################################################################################################
-
-# def adjust_req_rebar(current_span, rebar_element):
-#     # lengths = [.02, .05, .1, .15, .2, .25, .3, .35, .4, .45, .5, .55, .6, .65, .7, .75, .8, .85, .9, .95, .98]
-
-#     if rebar_element.start_loc == 0 and current_span.top_rebar_req.point_loc[0] < .05:
-#         current_span.top_rebar_req.point_loc[0]
-
-#     for dist in range(0,len(span.top_rebar_req.point_loc)):
-#         print('point location = ', span.top_rebar_req.point_loc[dist])
-#         print('selected_area = ', span.top_rebar_req.selected_area[dist])
-
-#         span.top_rebar_req.point_loc[dist]
+    return best_size, num_best_bars
 
 def get_areas(current_span):
     max_left_top = 0
@@ -236,11 +200,11 @@ def main():
     define_long_rebar(wb, spans)
     finalize_spans(spans)
 
-    # for x in spans:
-    #     x.get_span_info()
-
     # optimize_gbs(spans, user_input)
     reinf_for_max_area(spans,user_input)
+
+    for x in spans:
+        x.get_span_info()
 
 main()
 

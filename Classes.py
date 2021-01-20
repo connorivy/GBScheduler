@@ -11,12 +11,12 @@ class ParamatersDefinedByUser:
         self.lam = lam
 
 class RebarElement:
-    def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0):
+    def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0, num_bars=0):
         self.a_required = a_required
         self.bar_size = bar_size
         self.start_loc = start_loc
         self.end_loc = end_loc
-        self.num_bars = 0
+        self.num_bars = num_bars
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
@@ -59,10 +59,7 @@ class Span:
         self.original_top_rebar_req = []
         self.original_bot_rebar_req = []
         self.top_rebar_elements = []
-        self.lt_rebar = RebarElement()
-        self.cb_rebar = RebarElement()
-        self.ct_rebar = RebarElement()
-        self.rt_rebar = RebarElement()
+        self.bot_rebar_elements = []
         self.stirrups = None
 
     def get_span_info(self):
@@ -72,16 +69,18 @@ class Span:
         print('span width:            ', self.width)
         print('span depth:            ', self.depth)
         print('\ntop rebar:')
-        if self.top_rebar_req == []:
+        if self.top_rebar_elements == []:
             print('  -')
         else:
-            self.get_rebar_req_info(self.top_rebar_req)
+            for rebar_element in self.top_rebar_elements:
+                rebar_element.get_rebar_info()
 
         print('\nbottom rebar:')
-        if self.bot_rebar_req == []:
+        if self.bot_rebar_elements == []:
             print('  -')
         else:
-            self.get_rebar_req_info(self.bot_rebar_req)
+            for rebar_element in self.bot_rebar_elements:
+                rebar_element.get_rebar_info()
 
     def get_rebar_req_info(self, topbot):
         print('  location, selected_area')
@@ -89,6 +88,7 @@ class Span:
             print('    ', topbot[x][0], ', ', topbot[x][1])
 
     def get_min_num_bars(self):
+        # no more than 18" between bars
         beam_width_no_cover = self.width - 2 * self.cover_side
         self.min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
 
@@ -103,10 +103,3 @@ class Stirrups:
         self.a_required = a_required
         self.start_loc = start_loc
         self.end_loc = end_loc
-
-class Search:
-    def __init__(self, start_flag, end_flag):
-        self.looking = False
-        self.defined = False
-        self.start_flag = start_flag
-        self.end_flag = end_flag
