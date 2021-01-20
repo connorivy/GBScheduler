@@ -13,6 +13,18 @@ def lineno():
     """Returns the current line number in our program."""
     return inspect.currentframe().f_back.f_lineno
 
+def add_min_reinf(spans):
+    # i dont love this function, it just assigns the minimum amount of #6 bars as the minimum area
+    # i want to make it more dynamic and assign the minimum amount of whichever bars are being used
+    for current_span in spans:
+        # print(current_span.top_rebar_req)
+        current_span.get_min_num_bars()
+        min_num_bars = current_span.min_num_bars
+        for pair in current_span.top_rebar_req:
+            area = pair[1]
+            pair[1] = max(area, min_num_bars * .44)
+        # print(current_span.top_rebar_req)
+
 def reinf_for_max_area(spans, user_input):
     for current_span in spans:
         # returns 2d list [[max_left_top location, max_top_left area],[max_left_top location, max_top_left area], [[max_center_top]], [[max_right_top]]
@@ -24,21 +36,30 @@ def reinf_for_max_area(spans, user_input):
         max_areas_and_locations = order_max_areas(left_max_area, center_max_area, right_max_area)
         # print('sorted max areas', max_areas)
 
-        for area_and_locations in max_areas_and_locations:
-            max_area = area_and_locations[0][1]
+        max_area = max_areas_and_locations[0][0][1]
 
-            if max_area == 0:
-                continue
-            else:
-                bar_size , num_bars = get_best_rebar_sizes(current_span, max_area)
-                length = current_span.length
-                dl = development_len(bar_size, user_input) / length
+        if max_area == 0:
+            continue
+        else:
+            bar_size , num_bars = get_best_rebar_sizes(current_span, max_area)
+            length = current_span.length
+            dl = development_len(bar_size, user_input) / length
 
-                start_loc = round_down(max(area_and_locations[0][0] - dl, 0))
-                end_loc = round_up(min(area_and_locations[-1][0] + dl, 1))
-                current_span.top_rebar_elements.append(RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars))
-                a_provided = current_span.top_rebar_elements[-1].get_area()
-                # current_span.top_rebar_elements[-1].get_rebar_info()
+            start_loc = round_down(max(max_areas_and_locations[0][0][0] - dl, 0))
+            end_loc = round_up(min(max_areas_and_locations[0][-1][0] + dl, 1))
+            current_span.top_rebar_elements.append(RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars))
+            current_span.top_rebar_elements[-1].get_area()
+
+def update_req_areas(spans):
+    for current_span in spans:
+        print(current_span.top_rebar_req)
+        for rebar_element in current_span.top_rebar_elements:
+            if not rebar_element.rebar_subtracted:
+                for pair in current_span.top_rebar_req:
+                    if rebar_element.start_loc <= pair[0] and rebar_element.end_loc >= pair[0]:
+                        pair[1] = max(pair[1] - rebar_element.a_provided, 0)
+                    rebar_element.rebar_subtracted = True
+        print(current_span.top_rebar_req, '\n')
 
 def get_max_area(current_span):
     # design top bars
@@ -124,7 +145,6 @@ def order_max_areas(left, center, right):
 
 
 def get_best_rebar_sizes(current_span, area):
-    current_span.get_min_num_bars()
     min_num_bars = current_span.min_num_bars
     min_extra_rebar_area = 100
 
@@ -169,21 +189,6 @@ def get_areas(current_span):
 
     return [max_left_top, max_center_top, max_right_top]
 
-def development_length(bar_size, user_input):
-    bar_diameter = float(bar_size / 8)
-
-    # per ACI 318-14 table 25.4.2.2
-    if bar_size <= 6:
-        constant = 20
-    else:
-        constant = 25
-
-    # clovis multiplied development length by 1.3 and I'm not sure why.
-    ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
-    
-    # print('development length', ld)
-    return ld
-
 def round_up(num):
     return float(math.ceil(num*20) / 20)
 
@@ -200,8 +205,9 @@ def main():
     define_long_rebar(wb, spans)
     finalize_spans(spans)
 
-    # optimize_gbs(spans, user_input)
+    add_min_reinf(spans)
     reinf_for_max_area(spans,user_input)
+    update_req_areas(spans)
 
     for x in spans:
         x.get_span_info()

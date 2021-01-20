@@ -17,6 +17,7 @@ class RebarElement:
         self.start_loc = start_loc
         self.end_loc = end_loc
         self.num_bars = num_bars
+        self.rebar_subtracted = False
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
