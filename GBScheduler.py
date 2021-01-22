@@ -1,13 +1,16 @@
 from openpyxl import Workbook
 import xlrd
 import openpyxl
+from tkinter import Tk, Canvas, Frame, BOTH
+import inspect
+import math
+
 from Classes import ParamatersDefinedByUser
 from Classes import RebarElement
 from create_spans import define_spans
 from create_spans import define_long_rebar
 from create_spans import finalize_spans
-import inspect
-import math
+from gui import GUI
 
 def lineno():
     """Returns the current line number in our program."""
@@ -202,15 +205,19 @@ def main():
 
     user_input = ParamatersDefinedByUser(4000, 60000, 1, 1, 1)
     spans = define_spans(wb)
-    define_long_rebar(wb, spans)
-    finalize_spans(spans)
+    # define_long_rebar(wb, spans)
+    # finalize_spans(spans)
 
-    add_min_reinf(spans)
-    reinf_for_max_area(spans,user_input)
-    update_req_areas(spans)
+    # add_min_reinf(spans)
+    # reinf_for_max_area(spans,user_input)
+    # update_req_areas(spans)
 
-    for x in spans:
-        x.get_span_info()
+    root = Tk()
+    gui = GUI(root, spans)
+    root.mainloop()
+
+    # for x in spans:
+    #     x.get_span_info()
 
 main()
 

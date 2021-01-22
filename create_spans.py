@@ -1,4 +1,4 @@
-from Classes import Span
+from Classes import SingleSpan
 from Classes import RebarElement
 
 def define_spans(wb):
@@ -36,7 +36,7 @@ def define_spans(wb):
                         value = 'CR'
                 # returns span object with the following attributes
                 # span number (or CR / CL if cantilever), length, width, depth
-                spans.append(Span(value, float(ws.cell(row,3).value), float(ws.cell(row,4).value), float(ws.cell(row,5).value)))
+                spans.append(SingleSpan(value, float(ws.cell(row,3).value), float(ws.cell(row,4).value), float(ws.cell(row,5).value)))
 
     return spans
 

@@ -45,7 +45,7 @@ class RebarElement:
         # print('development length', ld)
         return ld
 
-class Span:
+class SingleSpan:
     def __init__(self, number, length, width, depth, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
         self.number = number
         self.length = length
