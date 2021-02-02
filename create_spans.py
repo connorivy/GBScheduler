@@ -1,5 +1,6 @@
 from Classes import SingleSpan
 from Classes import RebarElement
+import copy
 
 def define_spans(wb):
     # open the '(2)' tab in the excel sheet and extract the data for each span
@@ -67,8 +68,9 @@ def define_long_rebar(wb, spans):
 
 def finalize_spans(spans):
     for current_span in spans:
-        current_span.original_top_rebar_req = current_span.top_rebar_req
-        current_span.original_bot_rebar_req = current_span.bot_rebar_req
+        # make a deep copy of the original top and bottom rebar so they never change
+        current_span.original_top_rebar_req = copy.deepcopy(current_span.top_rebar_req)
+        current_span.original_bot_rebar_req = copy.deepcopy(current_span.bot_rebar_req)
         current_span.get_min_num_bars()
 
 def is_num(s):

@@ -99,6 +99,13 @@ class SingleSpan:
     
     # def max_shear_spacing():
 
+class VirtualSingleSpan:
+    def __init__(self, left, top, right, bot):
+        self.left = left
+        self.top = top
+        self.right = right
+        self.bot = bot
+
 class Stirrups:
     def __init__(self, a_required, start_loc, end_loc):
         self.a_required = a_required

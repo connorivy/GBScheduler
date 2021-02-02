@@ -55,14 +55,14 @@ def reinf_for_max_area(spans, user_input):
 
 def update_req_areas(spans):
     for current_span in spans:
-        print(current_span.top_rebar_req)
+        # print(current_span.top_rebar_req)
         for rebar_element in current_span.top_rebar_elements:
             if not rebar_element.rebar_subtracted:
                 for pair in current_span.top_rebar_req:
                     if rebar_element.start_loc <= pair[0] and rebar_element.end_loc >= pair[0]:
                         pair[1] = max(pair[1] - rebar_element.a_provided, 0)
                     rebar_element.rebar_subtracted = True
-        print(current_span.top_rebar_req, '\n')
+        # print(current_span.top_rebar_req, '\n')
 
 def get_max_area(current_span):
     # design top bars
@@ -205,12 +205,12 @@ def main():
 
     user_input = ParamatersDefinedByUser(4000, 60000, 1, 1, 1)
     spans = define_spans(wb)
-    # define_long_rebar(wb, spans)
-    # finalize_spans(spans)
+    define_long_rebar(wb, spans)
+    finalize_spans(spans)
 
-    # add_min_reinf(spans)
-    # reinf_for_max_area(spans,user_input)
-    # update_req_areas(spans)
+    add_min_reinf(spans)
+    reinf_for_max_area(spans,user_input)
+    update_req_areas(spans)
 
     root = Tk()
     gui = GUI(root, spans)
