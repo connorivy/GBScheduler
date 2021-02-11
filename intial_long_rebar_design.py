@@ -4,8 +4,7 @@ from Classes import RebarElement
 from create_spans import define_spans
 from create_spans import define_long_rebar
 from create_spans import finalize_spans
-from gui import GUI
-# from update_rebar import assign_from_bar_schedule
+from update_rebar import assign_from_bar_schedule
 
 
 def add_min_reinf(spans):
@@ -44,17 +43,6 @@ def reinf_for_max_area(spans, user_input):
             end_loc = round_up(min(max_areas_and_locations[0][-1][0] + dl, 1))
             current_span.top_rebar_elements.append(RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars))
             current_span.top_rebar_elements[-1].get_area()
-
-def update_req_areas(spans):
-    for current_span in spans:
-        # print(current_span.top_rebar_req)
-        for rebar_element in current_span.top_rebar_elements:
-            if not rebar_element.rebar_subtracted:
-                for pair in current_span.top_rebar_req:
-                    if rebar_element.start_loc <= pair[0] and rebar_element.end_loc >= pair[0]:
-                        pair[1] = max(pair[1] - rebar_element.a_provided, 0)
-                    rebar_element.rebar_subtracted = True
-        # print(current_span.top_rebar_req, '\n')
 
 def get_max_area(current_span):
     # design top bars

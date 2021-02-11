@@ -10,8 +10,8 @@ from create_spans import define_spans
 from create_spans import define_long_rebar
 from create_spans import finalize_spans
 from gui import GUI
-from intial_long_rebar_design import add_min_reinf, reinf_for_max_area, update_req_areas
-# from update_rebar import assign_from_bar_schedule
+from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
+from update_rebar import update_req_areas
 
 def lineno():
     """Returns the current line number in our program."""
@@ -33,7 +33,7 @@ def main():
     update_req_areas(spans)
 
     root = Tk()
-    gui = GUI(root, spans)
+    gui = GUI(root, spans, user_input)
     root.mainloop()
 
     # for x in spans:

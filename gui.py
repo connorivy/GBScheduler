@@ -1,14 +1,17 @@
 from tkinter import Tk, Canvas, Frame, BOTH, Button
 from create_spans import is_num
-from Classes import VirtualSingleSpan
+import copy
+
+from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
+from update_rebar import update_req_areas
 
 class GUI(Frame):
 
-    def __init__(self, master, spans):
+    def __init__(self, master, spans,user_input):
         super().__init__()
-        self.initUI(master, spans)
+        self.initUI(master, spans,user_input)
 
-    def initUI(self,master,spans):
+    def initUI(self,master,spans, user_input):
         self.master=master
         pad=3
         self._geom='200x200+0+0'
@@ -21,7 +24,8 @@ class GUI(Frame):
         self.pack(fill=BOTH, expand=1)
         canvas = Canvas(self)
 
-        self.add_btn(canvas,spans)
+        self.add_update_btn(canvas,spans,user_input)
+        self.add_reset_btn(canvas,spans,user_input)
         self.draw_beam(canvas,spans)
 
         canvas.pack(fill=BOTH, expand=1)
@@ -90,14 +94,32 @@ class GUI(Frame):
             y_dim = cs.mid_height - cs.beam_height * element.a_provided / max_rebar_area
             canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 3)
 
-    def add_btn(self, canvas, spans):
-        self.update_btn = Button(self, text="Hello", command = lambda:self.update(canvas,spans))
-        self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.0)
+    def add_update_btn(self, canvas, spans, user_input):
+        self.update_btn = Button(self, text="UPDATE", command = lambda:self.update(canvas,spans,user_input))
+        self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
         # self.update_btn.pack()
 
-    def update(self,canvas,spans):
+    def add_reset_btn(self, canvas, spans, user_input):
+        self.update_btn = Button(self, text="RESET", command = lambda:self.reset(canvas,spans,user_input))
+        self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.07)
+        # self.update_btn.pack()
+
+    def update(self,canvas,spans,user_input):
         canvas.delete("all")
-        print('ypooooooooooooooo')
+
+        reinf_for_max_area(spans,user_input)
+        update_req_areas(spans)
+
+        self.draw_beam(canvas,spans)
+
+    def reset(self,canvas,spans,user_input):
+        canvas.delete("all")
+
+        for x in spans:
+            x.top_rebar_elements = []
+            x.top_rebar_req = copy.deepcopy(x.original_top_rebar_req)
+
+        add_min_reinf(spans)
         self.draw_beam(canvas,spans)
 
 

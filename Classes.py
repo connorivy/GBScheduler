@@ -72,6 +72,7 @@ class SingleSpan:
         print('span width:            ', self.width)
         print('span depth:            ', self.depth)
         print('\ntop rebar:')
+        
         if self.top_rebar_elements == []:
             print('  -')
         else:
@@ -101,12 +102,10 @@ class SingleSpan:
     
     # def max_shear_spacing():
 
-class VirtualSingleSpan:
+class AllSpans:
     def __init__(self, left, top, right, bot):
-        self.left = left
-        self.top = top
-        self.right = right
-        self.bot = bot
+        self.top_rebar_elements = []
+        self.bot_rebar_elements = []
 
 class Stirrups:
     def __init__(self, a_required, start_loc, end_loc):
