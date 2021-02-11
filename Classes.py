@@ -18,6 +18,7 @@ class RebarElement:
         self.end_loc = end_loc
         self.num_bars = num_bars
         self.rebar_subtracted = False
+        self.scheduled_shape = 'None'
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
@@ -31,6 +32,7 @@ class RebarElement:
         print('  num of bars:         ', self.num_bars)
         print('  start location:      ', self.start_loc)
         print('  end location:        ', self.end_loc)
+        print('  scheduled shape:     ', self.scheduled_shape)
 
     def development_len(self, user_input):
         bar_diameter = float(self.bar_size / 8)

@@ -21,9 +21,8 @@ class GUI(Frame):
         self.pack(fill=BOTH, expand=1)
         canvas = Canvas(self)
 
-        self.add_btn()
+        self.add_btn(canvas,spans)
         self.draw_beam(canvas,spans)
-        print('init')
 
         canvas.pack(fill=BOTH, expand=1)
 
@@ -91,17 +90,15 @@ class GUI(Frame):
             y_dim = cs.mid_height - cs.beam_height * element.a_provided / max_rebar_area
             canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 3)
 
-    def add_btn(self):
-        self.update_btn = Button(self, text="Hello", command = self.update)
-        self.update_btn.place(relheight = 0.1, relwidth = 0.1, relx = 0.5, rely = 0.4)
-        # update_btn.pack()
+    def add_btn(self, canvas, spans):
+        self.update_btn = Button(self, text="Hello", command = lambda:self.update(canvas,spans))
+        self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.0)
+        # self.update_btn.pack()
 
-    def update(self):
-        canvas = Canvas(self)
-        canvas.delete('all')
+    def update(self,canvas,spans):
+        canvas.delete("all")
         print('ypooooooooooooooo')
-        update_btn = Button(self, text="Hello", command = self.update)
-        update_btn.pack()
+        self.draw_beam(canvas,spans)
 
 
 
