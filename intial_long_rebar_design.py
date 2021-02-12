@@ -12,7 +12,7 @@ def add_min_reinf(spans):
     # i want to make it more dynamic and assign the minimum amount of whichever bars are being used
     for current_span in spans:
         # print(current_span.top_rebar_req)
-        current_span.get_min_num_bars()
+        # current_span.get_min_num_bars()
         min_num_bars = current_span.min_num_bars
         for pair in current_span.top_rebar_req:
             area = pair[1]
@@ -21,7 +21,7 @@ def add_min_reinf(spans):
 
 def reinf_for_max_area(spans, user_input):
     for current_span in spans:
-        # returns 2d list [[max_left_top location, max_top_left area],[max_left_top location, max_top_left area], [[max_center_top]], [[max_right_top]]
+        # returns 2d list [[max_left_top location1, max_top_left area],[max_left_top location2, max_top_left area],          [[max_center_top]],             2d lis[[max_right_top]]
         left_max_area, center_max_area, right_max_area = get_max_area(current_span)
         # print('max areas', left_max_area, center_max_area, right_max_area)
 
