@@ -1,4 +1,7 @@
 import math
+import more_itertools as mit
+import copy
+import time
 
 from Classes import RebarElement
 from create_spans import define_spans
@@ -7,42 +10,82 @@ from create_spans import finalize_spans
 from update_rebar import assign_from_bar_schedule
 
 
-def add_min_reinf(spans):
+def add_min_reinf(beam_run_info):
     # i dont love this function, it just assigns the minimum amount of #6 bars as the minimum area
     # i want to make it more dynamic and assign the minimum amount of whichever bars are being used
-    for current_span in spans:
-        # print(current_span.top_rebar_req)
-        current_span.get_min_num_bars()
-        min_num_bars = current_span.min_num_bars
-        for pair in current_span.top_rebar_req:
-            area = pair[1]
-            pair[1] = max(area, min_num_bars * .44)
-        # print(current_span.top_rebar_req)
+    for rebar_req in beam_run_info.rebar_req:
+        current_span = beam_run_info.spans[rebar_req[3]]
 
-def reinf_for_max_area(spans, user_input):
-    for current_span in spans:
-        # returns 2d list [[max_left_top location, max_top_left area],[max_left_top location, max_top_left area], [[max_center_top]], [[max_right_top]]
-        left_max_area, center_max_area, right_max_area = get_max_area(current_span)
-        # print('max areas', left_max_area, center_max_area, right_max_area)
+        rebar_req[1] = max(rebar_req[1], current_span.min_num_bars * .44)
+        rebar_req[2] = max(rebar_req[2], current_span.min_num_bars * .44)
 
-        # assign rebar in order
-        # returns 3d list
-        max_areas_and_locations = order_max_areas(left_max_area, center_max_area, right_max_area)
-        # print('sorted max areas', max_areas)
+def reinf_for_max_area(beam_run_info, user_input):
+    rebar_req = beam_run_info.rebar_req
+    max_area, grouped_indices = get_max_area_indices(rebar_req)
 
-        max_area = max_areas_and_locations[0][0][1]
+    if max_area:
+        for group in grouped_indices:
+            bar_size , num_bars = get_best_rebar_sizes(beam_run_info, rebar_req[group[0]][3], max_area)
+            dl = development_len(bar_size, user_input)
 
-        if max_area == 0:
-            continue
-        else:
-            bar_size , num_bars = get_best_rebar_sizes(current_span, max_area)
-            length = current_span.length
-            dl = development_len(bar_size, user_input) / length
+            start_loc = max(rebar_req[group[0]][0] - dl, 0)
+            end_loc = min(rebar_req[group[-1]][0] + dl, beam_run_info.all_spans_len)
+            new_bar = RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars)
 
-            start_loc = round_down(max(max_areas_and_locations[0][0][0] - dl, 0))
-            end_loc = round_up(min(max_areas_and_locations[0][-1][0] + dl, 1))
-            current_span.top_rebar_elements.append(RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars))
-            current_span.top_rebar_elements[-1].get_area()
+            # try_extend_neighbor_bars(new_bar, beam_run_info)
+            print(start_loc, end_loc)
+            beam_run_info.top_rebar.append(new_bar)
+
+    # for index in range(len(beam_run_info.rebar_req)):
+    # for current_span in beam_run_info.spans:
+    #     # returns 2d list [[max_left_top location, max_top_left area],[max_left_top location, max_top_left area], [[max_center_top]], [[max_right_top]]
+    #     left_max_area, center_max_area, right_max_area = get_max_area(current_span)
+    #     # print('max areas', left_max_area, center_max_area, right_max_area)
+
+    #     # assign rebar in order
+    #     # returns 3d list
+    #     max_areas_and_locations = order_max_areas(left_max_area, center_max_area, right_max_area)
+    #     # print('sorted max areas', max_areas)
+
+    #     max_area = max_areas_and_locations[0][0][1]
+
+    #     if max_area == 0:
+    #         continue
+    #     else:
+    #         bar_size , num_bars = get_best_rebar_sizes(current_span, max_area)
+    #         dl = development_len(bar_size, user_input) / current_span.length
+
+    #         start_loc = current_span.len_prev_spans + current_span.length * round_down(max(max_areas_and_locations[0][0][0] - dl, 0))
+    #         end_loc = current_span.len_prev_spans + current_span.length * round_up(min(max_areas_and_locations[0][-1][0] + dl, 1))
+    #         new_bar = RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars)
+
+    #         try_extend_neighbor_bars(new_bar, beam_run_info)
+    #         beam_run_info.top_rebar.append(new_bar)
+
+def get_max_area_indices(rebar_req):
+    top_rebar_req = [row[1] for row in rebar_req]
+    max_area = max(top_rebar_req)
+    all_indices = [i for i, j in enumerate(top_rebar_req) if j == max_area]
+    grouped_indices = [list(group) for group in mit.consecutive_groups(all_indices)]
+
+    return max_area, grouped_indices
+
+# def get_max_area_indices1(rebar_req):
+#     max_top_area = 0
+#     indices = [[]]
+#     for index in range(len(rebar_req)):
+#         temp_max_area = copy.copy(max_top_area)
+#         max_top_area = max(rebar_req[index][1], max_top_area)
+#         if max_top_area != temp_max_area:
+#             indices = [[index]]
+#         elif max_top_area == temp_max_area:
+#             if index - indices[-1][-1] < 5:
+#                 indices[-1].append(index)
+#             else:
+#                 indices.append([index])
+#     return indices
+
+
 
 def get_max_area(current_span):
     # design top bars
@@ -127,8 +170,8 @@ def order_max_areas(left, center, right):
     return max_areas
 
 
-def get_best_rebar_sizes(current_span, area):
-    min_num_bars = current_span.min_num_bars
+def get_best_rebar_sizes(beam_run_info, span_num, area):
+    min_num_bars = beam_run_info.spans[span_num].min_num_bars
     min_extra_rebar_area = 100
 
     for bar_num in range(6,12):
@@ -152,3 +195,9 @@ def round_up(num):
 
 def round_down(num):
     return float(math.floor(num*20) / 20)
+
+def try_extend_neighbor_bars(new_bar, beam_run_info):
+    # print('try_extend_neighbor_bars')
+    beam_run_info.top_rebar.sort(key=lambda x: x.start_loc)
+    # for x in beam_run_info.top_rebar:
+    #     print('start_loc',x.start_loc)

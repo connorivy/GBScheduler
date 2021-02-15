@@ -1,6 +1,22 @@
 import math
 
-class ParamatersDefinedByUser:
+class BeamRunInfo:
+    def __init__(self):
+        self.top_rebar = []
+        self.bot_rebar = []
+        self.rebar_req = []
+        self.original_rebar_req = []
+        self.all_spans_len = 0
+        self.max_beam_depth = 0
+        self.max_rebar_area = 0
+
+    def get_rebar_req_info(self):
+        print('  location, top_selected_area, bot_selected_area')
+        for x in range(len(self.rebar_req)):
+            print('    ', x, round(self.rebar_req[x][0],2), ', ', self.rebar_req[x][1], ', ', self.rebar_req[x][2], ', ', self.rebar_req[x][3])
+
+
+class ParametersDefinedByUser:
     def __init__(self, fc, yield_strength, psi_t, psi_e, lam):
         self.fc = fc
         self.yield_strength = yield_strength
@@ -19,6 +35,7 @@ class RebarElement:
         self.num_bars = num_bars
         self.rebar_subtracted = False
         self.scheduled_shape = 'None'
+        self.get_area()
 
     def get_area(self):
         self.bar_diameter = float(self.bar_size / 8)
@@ -48,7 +65,7 @@ class RebarElement:
         return ld
 
 class SingleSpan:
-    def __init__(self, number, length, width, depth, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
+    def __init__(self, number, length, width, depth, len_prev_spans, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
         self.number = number
         self.length = length
         self.width = width
@@ -64,6 +81,8 @@ class SingleSpan:
         self.top_rebar_elements = []
         self.bot_rebar_elements = []
         self.stirrups = None
+        self.len_prev_spans = len_prev_spans
+        self.get_min_num_bars()
 
     def get_span_info(self):
         print('\n\nspan number:           ', self.number)
@@ -85,11 +104,6 @@ class SingleSpan:
         else:
             for rebar_element in self.bot_rebar_elements:
                 rebar_element.get_rebar_info()
-
-    def get_rebar_req_info(self, topbot):
-        print('  location, selected_area')
-        for x in range(len(topbot)):
-            print('    ', topbot[x][0], ', ', topbot[x][1])
 
     def get_min_num_bars(self):
         # no more than 18" between bars
