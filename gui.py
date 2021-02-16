@@ -1,5 +1,6 @@
 from tkinter import Tk, Canvas, Frame, BOTH, Button
 from create_spans import is_num
+from Classes import VolDiff
 import copy
 
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -82,11 +83,24 @@ class GUI(Frame):
         half_diagram_height = self.screenheight * .075
 
         top_rebar_elements = beam_run_info.top_rebar
+        top_rebar_elements.sort(key=lambda x: x.a_provided)
+
         for element in top_rebar_elements:
             x1_dim = length_along_screen + element.start_loc / beam_run_info.all_spans_len * spans_length_on_screen
             x2_dim = length_along_screen + element.end_loc / beam_run_info.all_spans_len * spans_length_on_screen
-            y_dim = mid - half_diagram_height * element.a_provided / beam_run_info.max_rebar_area
-            canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 3)
+            y_dim = mid - half_diagram_height * (element.a_provided + element.a_from_smaller)/ beam_run_info.max_rebar_area
+            line = canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 4, fill="Black", activefill="Red")
+            
+            canvas.tag_bind(line, '<ButtonPress-1>', lambda event, element = element: self.on_click(event, element))
+            canvas.pack()
+
+            element.drawn = True
+            # canvas.bind(line, '<Double-1>', self.on_click)
+            # canvas.tag_bind()
+
+    def on_click(self, event, element):
+        print('\n\n\n')
+        element.get_rebar_info()
 
     def add_update_btn(self, canvas, beam_run_info, user_input):
         self.update_btn = Button(self, text="UPDATE", command = lambda:self.update(canvas,beam_run_info,user_input))

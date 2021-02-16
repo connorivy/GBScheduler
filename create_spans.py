@@ -51,7 +51,6 @@ def define_long_rebar(wb, beam_run_info):
 
     num_consec_spaces = 0
     current_span_num = -1
-    max_rebar_area = 0
     for row in range(ws.nrows):
         # look in the first column bc the 0th column is blank
         cell = ws.cell(row,1)

@@ -12,4 +12,4 @@ def update_req_areas(beam_run_info):
     # print(beam_run_info.rebar_req)
 
 def assign_from_bar_schedule(rebar):
-    min_rebar_length = rebar.end_loc - rebar.start_loc
+    print('assign_from_bar_schedule')
