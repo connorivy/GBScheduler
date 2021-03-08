@@ -140,6 +140,24 @@ class VolDiff:
         self.new_large_bar = new_large_bar
         self.new_small_bar = new_small_bar
 
+class RevGB:
+    def __init__(self,num,string):
+        string = string.strip()
+        bad_chars = [',', ')', '(']
+        for i in bad_chars:
+            string = string.replace(i, '')
+        string_list = string.split(' ')
+        self.num = num
+        self.start_x = float(string_list[0])
+        self.start_y = float(string_list[1])
+        self.start_z = float(string_list[2])
+        self.end_x = float(string_list[3])
+        self.end_y = float(string_list[4])
+        self.end_z = float(string_list[5])
+        self.width = float(string_list[6])
+        self.depth = float(string_list[7])
+
+
 class Stirrups:
     def __init__(self, a_required, start_loc, end_loc):
         self.a_required = a_required

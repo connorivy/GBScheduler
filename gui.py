@@ -1,6 +1,6 @@
-from tkinter import Tk, Canvas, Frame, BOTH, Button
+from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog
 from create_spans import is_num
-from Classes import VolDiff
+from Classes import VolDiff, RevGB
 import copy
 
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -18,16 +18,22 @@ class GUI(Frame):
         self._geom='200x200+0+0'
         self.screenwidth = master.winfo_screenwidth()-pad
         self.screenheight = master.winfo_screenheight()-pad
+        self.usable_screenwidth = float(self.screenwidth * .8)
+        self.usable_screenheight = float(self.screenheight * .8)
+        self.screenwidth_padding = float(self.screenwidth * .1)
+        self.screenheight_padding = float(self.screenheight * .1)
         master.geometry("{0}x{1}+0+0".format(self.screenwidth, self.screenheight))
         master.bind('<Escape>',self.toggle_geom)
-
         self.master.title("beam scheduler")
         self.pack(fill=BOTH, expand=1)
         canvas = Canvas(self)
 
-        self.add_update_btn(canvas,beam_run_info,user_input)
-        self.add_reset_btn(canvas,beam_run_info,user_input)
-        self.draw_reinf_diagram(canvas,beam_run_info)
+        self.draw_all_gbs(canvas)
+        self.add_browse_btn(canvas)
+
+        # self.add_update_btn(canvas,beam_run_info,user_input)
+        # self.add_reset_btn(canvas,beam_run_info,user_input)
+        # self.draw_reinf_diagram(canvas,beam_run_info)
 
         canvas.pack(fill=BOTH, expand=1)
 
@@ -95,17 +101,61 @@ class GUI(Frame):
             canvas.pack()
 
             element.drawn = True
-            # canvas.bind(line, '<Double-1>', self.on_click)
-            # canvas.tag_bind()
+            
+    def draw_all_gbs(self, canvas):
+        path = 'helper_files/revit_output.txt'
+        revit_output = open(path, 'r')
+        lines = revit_output.readlines()
+        revit_output.close()
+
+        rev_gbs = []
+        max_x = -10000000.0
+        min_x = 10000000.0
+        max_y = -1000000.0
+        min_y = 10000000.0
+
+        for line in range(len(lines)):
+            rev_gbs.append(RevGB(line, lines[line]))
+            
+            max_x = max(max_x, rev_gbs[-1].start_x, rev_gbs[-1].end_x)
+            min_x = min(min_x, rev_gbs[-1].start_x, rev_gbs[-1].end_x)
+            max_y = max(max_y, rev_gbs[-1].start_y, rev_gbs[-1].end_y)
+            min_y = min(min_y, rev_gbs[-1].start_y, rev_gbs[-1].end_y)
+
+        scale = min(self.usable_screenwidth / (max_x-min_x), self.usable_screenheight / (max_y - min_y))
+
+        for gb in rev_gbs:
+            print(self.screenwidth_padding, (gb.start_x - min_x) * scale, self.screenwidth_padding + (gb.start_x - min_x) * scale)
+            x1_dim = float((gb.start_x - min_x) * scale + self.screenwidth_padding)
+            x2_dim = float((gb.end_x - min_x) * scale + self.screenwidth_padding)
+            y1_dim = float(self.screenheight - ((gb.start_y - min_y) * scale) - self.screenheight_padding)
+            y2_dim = float(self.screenheight - ((gb.end_y - min_y) * scale) - self.screenheight_padding)
+
+            line = canvas.create_line(x1_dim, y1_dim, x2_dim, y2_dim, width = 4, fill="Black", activefill="Red")
+
+            canvas.tag_bind(line, '<ButtonPress-1>', lambda event, gb = gb: self.click_on_plan(event, gb))
+            canvas.pack()
+
 
     def on_click(self, event, element):
         print('\n\n\n')
         element.get_rebar_info()
 
+    def click_on_plan(self, event, gb):
+        print('%f %f' %(gb.start_x, gb.start_y))
+
     def add_update_btn(self, canvas, beam_run_info, user_input):
         self.update_btn = Button(self, text="UPDATE", command = lambda:self.update(canvas,beam_run_info,user_input))
         self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
         # self.update_btn.pack()
+
+    def add_browse_btn(self, canvas):
+        self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog())
+        self.browse_button.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
+
+    def fileDialog(self):
+        self.filename = filedialog.askdirectory(initialdir =  "/", title = "Where are you ADAPT runs?")
+        print(self.filename)
 
     def add_reset_btn(self, canvas, beam_run_info, user_input):
         self.update_btn = Button(self, text="RESET", command = lambda:self.reset(canvas,beam_run_info,user_input))
