@@ -2,9 +2,11 @@ from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog
 from create_spans import is_num
 from Classes import VolDiff, RevGB
 import copy
+import os
 
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
 from update_rebar import update_req_areas
+# from GBScheduler import create_beam_run_obj
 
 class GUI(Frame):
 
@@ -28,18 +30,18 @@ class GUI(Frame):
         self.pack(fill=BOTH, expand=1)
         canvas = Canvas(self)
 
-        self.draw_all_gbs(canvas)
-        self.add_browse_btn(canvas)
+        # self.draw_all_gbs(canvas)
+        # self.add_browse_btn(canvas)
 
-        # self.add_update_btn(canvas,beam_run_info,user_input)
-        # self.add_reset_btn(canvas,beam_run_info,user_input)
-        # self.draw_reinf_diagram(canvas,beam_run_info)
+        self.add_update_btn(canvas,beam_run_info,user_input)
+        self.add_reset_btn(canvas,beam_run_info,user_input)
+        self.draw_reinf_diagram(canvas,beam_run_info)
 
         canvas.pack(fill=BOTH, expand=1)
 
     def toggle_geom(self,event):
         geom=self.master.winfo_geometry()
-        print(geom,self._geom)
+        # print(geom,self._geom)
         self.master.geometry(self._geom)
         self._geom=geom
 
@@ -125,13 +127,12 @@ class GUI(Frame):
         scale = min(self.usable_screenwidth / (max_x-min_x), self.usable_screenheight / (max_y - min_y))
 
         for gb in rev_gbs:
-            print(self.screenwidth_padding, (gb.start_x - min_x) * scale, self.screenwidth_padding + (gb.start_x - min_x) * scale)
             x1_dim = float((gb.start_x - min_x) * scale + self.screenwidth_padding)
             x2_dim = float((gb.end_x - min_x) * scale + self.screenwidth_padding)
             y1_dim = float(self.screenheight - ((gb.start_y - min_y) * scale) - self.screenheight_padding)
             y2_dim = float(self.screenheight - ((gb.end_y - min_y) * scale) - self.screenheight_padding)
 
-            line = canvas.create_line(x1_dim, y1_dim, x2_dim, y2_dim, width = 4, fill="Black", activefill="Red")
+            line = canvas.create_line(x1_dim, y1_dim, x2_dim, y2_dim, width = 4, fill="Black", activefill="Red", state="disabled")
 
             canvas.tag_bind(line, '<ButtonPress-1>', lambda event, gb = gb: self.click_on_plan(event, gb))
             canvas.pack()
@@ -150,12 +151,22 @@ class GUI(Frame):
         # self.update_btn.pack()
 
     def add_browse_btn(self, canvas):
-        self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog())
+        self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog(canvas))
         self.browse_button.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
 
-    def fileDialog(self):
+    def fileDialog(self, canvas):
         self.filename = filedialog.askdirectory(initialdir =  "/", title = "Where are you ADAPT runs?")
-        print(self.filename)
+        run_names = next(os.walk(self.filename))[1]
+        self.beam_run_info_all = {}
+        for run in run_names:
+            print('hey')
+            # self.beam_run_info_all[run] = create_beam_run_obj(self.filename + '/' + run + '/report.xls')
+        self.create_run_btns(canvas, run_names)
+
+    def create_run_btns(self, canvas, run_names):
+        self.run_btns = []
+        for run in run_names:
+            self.run_btns.append(Button(self, text = run, command = lambda:self.fileDialog(canvas)))
 
     def add_reset_btn(self, canvas, beam_run_info, user_input):
         self.update_btn = Button(self, text="RESET", command = lambda:self.reset(canvas,beam_run_info,user_input))

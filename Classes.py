@@ -156,6 +156,7 @@ class RevGB:
         self.end_z = float(string_list[5])
         self.width = float(string_list[6])
         self.depth = float(string_list[7])
+        self.run = ''
 
 
 class Stirrups:

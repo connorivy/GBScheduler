@@ -16,6 +16,20 @@ from update_rebar import assign_from_bar_schedule, update_req_areas
 def lineno():
     """Returns the current line number in our program."""
     return inspect.currentframe().f_back.f_lineno
+
+# def create_beam_run_obj(file):
+#     file = "helper_files/report - DONT USE.xls"
+#     wb = xlrd.open_workbook(file)
+#     beam_run_info = BeamRunInfo()
+#     user_input = ParametersDefinedByUser(4000, 60000, 1, 1, 1)
+#     beam_run_info.spans, beam_run_info.max_beam_depth, beam_run_info.all_spans_len = define_spans(wb)
+#     define_long_rebar(wb, beam_run_info)  
+#     add_min_reinf(beam_run_info)
+#     reinf_for_max_area(beam_run_info,user_input)
+#     assign_from_bar_schedule(beam_run_info)
+#     update_req_areas(beam_run_info)
+
+#     return beam_run_info
     
 def main():
     file = "helper_files/report - DONT USE.xls"
