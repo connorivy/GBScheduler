@@ -71,7 +71,7 @@ class StartPage(tk.Frame):
 
 
 
-        canvas = tk.Canvas(self)
+        self.canvas = tk.Canvas(self)
 
         pad = 3
         self.screenwidth = self.winfo_screenwidth()-pad
@@ -81,16 +81,16 @@ class StartPage(tk.Frame):
         self.screenwidth_padding = float(self.screenwidth * .1)
         self.screenheight_padding = float(self.screenheight * .1)
 
-        self.draw_all_gbs(canvas)
-        self.add_browse_btn(canvas)
+        self.draw_all_gbs()
+        self.add_browse_btn()
 
         # self.add_update_btn(canvas,beam_run_info,user_input)
         # self.add_reset_btn(canvas,beam_run_info,user_input)
         # self.draw_reinf_diagram(canvas,beam_run_info)
 
-        canvas.pack(fill=tk.BOTH, expand=1)
+        self.canvas.pack(fill=tk.BOTH, expand=1)
 
-    def draw_all_gbs(self, canvas):
+    def draw_all_gbs(self):
         path = 'C:/Users/civy/Documents/GitHub/GBScheduler/helper_files/revit_output.txt'
         revit_output = open(path, 'r')
         lines = revit_output.readlines()
@@ -119,16 +119,15 @@ class StartPage(tk.Frame):
             y1_dim = float(self.screenheight - ((gb.start_y - min_y) * scale) - self.screenheight_padding)
             y2_dim = float(self.screenheight - ((gb.end_y - min_y) * scale) - self.screenheight_padding)
 
-        
-            gb_line = canvas.create_line(x1_dim, y1_dim, x2_dim, y2_dim, width = 4, fill="Black", activefill="Red", state="disabled")
-            print(gb_line)
+    
+            gb_line = self.canvas.create_line(x1_dim, y1_dim, x2_dim, y2_dim, width = 4, fill="Black", activefill="Red", state="disabled")
             self.gb_lines.append(gb_line)
 
-            canvas.tag_bind(gb_line, '<ButtonPress-1>', lambda event, gb = gb, line = line: self.add_to_active_run(event, gb, line))
-            canvas.pack()
+            self.canvas.tag_bind(gb_line, '<ButtonPress-1>', lambda event, gb = gb, line = line: self.add_to_active_run(event, gb, line))
+            self.canvas.pack()
 
-    def add_browse_btn(self, canvas):
-        self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog(canvas))
+    def add_browse_btn(self):
+        self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog())
         self.browse_button.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
 
     def add_to_active_run(self, event, gb, line):
@@ -140,10 +139,10 @@ class StartPage(tk.Frame):
         if active_flag == 'None':
             print('A line was clicked without an active flag. This shouldnt happen')
         else:
-            line.configure(fill='red', tags=flag)
+            self.canvas.itemconfig(line, fill='blue', tags=flag)
         print('%f %f' %(gb.start_x, gb.start_y))
 
-    def fileDialog(self, canvas):
+    def fileDialog(self):
         self.filename = filedialog.askdirectory(initialdir =  "/", title = "Where are you ADAPT runs?")
         run_names = next(os.walk(self.filename))[1]
         self.beam_run_info_all = {}
@@ -155,39 +154,65 @@ class StartPage(tk.Frame):
         self.run_btn_flags = {}
         self.assign_beams_to_run_flag = False
         for run in range(len(run_names)):
-            self.run_btns[run_names[run]] = Button(self, text = run_names[run], command=lambda: self.run_btn_pushed(self.run_btns[run_names[run]]))
+            self.run_btns[run_names[run]] = Button(self, text = run_names[run], command=lambda run_name = run_names[run]: self.run_btn_pushed(self.run_btns[run_name]))
             self.run_btns[run_names[run]].place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.07 + .06*run)
             self.run_btn_flags[run_names[run]] = False
 
         btn = Button(self, text = 'Assign Beams to Run', command=lambda: self.assign_beams_to_run(btn))
-        btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.78, rely = 0.01)
+        btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.785, rely = 0.01)
 
 
     def assign_beams_to_run(self, btn):
         self.assign_beams_to_run_flag = not self.assign_beams_to_run_flag
         if self.assign_beams_to_run_flag:
             btn.configure(bg = "red")
+        
         else:
+            self.reset_gb_plan()
+
+            # change assign beams btn color back
             btn.configure(bg = "SystemButtonFace")
-            for key, button in self.run_btns.items():
-                button.configure(bg = "SystemButtonFace")
-                print(self.gb_lines)
+
+            # disable all lines
             for line in self.gb_lines:
-                print(line)
-                line.configure(fill='black')
-            for key, flag in self.run_btn_flags.items():
-                flag = False
+                self.canvas.itemconfig(line, state='disabled')
 
     def run_btn_pushed(self, btn):
-        self.run_btn_flags[btn['text']] == True
-        if self.assign_beams_to_run_flag:
-            btn.configure(bg = "red")
+        # if that button is already flagged, reset everything and turn off the flag
+        if self.run_btn_flags[btn['text']]:
+            self.reset_gb_plan()
+            self.run_btn_flags[btn['text']] = False
+        # if assign ba=eams to run flag is true, flag this btn, change color of all beams belonging to this run
+        elif self.assign_beams_to_run_flag:
+            self.reset_gb_plan()
+            # enable lines
             for line in self.gb_lines:
-                if line.tags() == btn['text']:
-                    line.configure(fill='red')
+                self.canvas.itemconfig(line, state='normal')
+
+            self.run_btn_flags[btn['text']] = True
+            btn.configure(bg = "blue")
+            for line in self.gb_lines:
+                if self.canvas.gettags(line) == btn['text']:
+                    self.canvas.itemconfig(line, fill='blue')
         else:
             self.controller.show_frame("PageOne")
 
+    def reset_gb_plan(self):
+        # change lines back to black
+        for line in self.gb_lines:
+            self.canvas.itemconfig(line, fill='black')
+
+        # change beam run colors back
+        for key, button in self.run_btns.items():
+            button.configure(bg = "SystemButtonFace")
+
+        # turn all run btn flags to false
+        for key in self.run_btn_flags.keys():
+            self.run_btn_flags[key] = False
+
+        # disable lines
+        for line in self.gb_lines:
+                self.canvas.itemconfig(line, state='disabled')
 
 class PageOne(tk.Frame):
 
