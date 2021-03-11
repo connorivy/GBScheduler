@@ -123,14 +123,14 @@ class StartPage(tk.Frame):
             gb_line = self.canvas.create_line(x1_dim, y1_dim, x2_dim, y2_dim, width = 4, fill="Black", activefill="Red", state="disabled")
             self.gb_lines.append(gb_line)
 
-            self.canvas.tag_bind(gb_line, '<ButtonPress-1>', lambda event, gb = gb, line = line: self.add_to_active_run(event, gb, line))
+            self.canvas.tag_bind(gb_line, '<ButtonPress-1>', lambda event, gb = gb, gb_line = gb_line: self.add_to_active_run(event, gb, gb_line))
             self.canvas.pack()
 
     def add_browse_btn(self):
         self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog())
         self.browse_button.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
 
-    def add_to_active_run(self, event, gb, line):
+    def add_to_active_run(self, event, gb, gb_line):
         active_flag = 'None'
         for flag in self.run_btn_flags.keys():
             if self.run_btn_flags[flag]:
@@ -139,7 +139,7 @@ class StartPage(tk.Frame):
         if active_flag == 'None':
             print('A line was clicked without an active flag. This shouldnt happen')
         else:
-            self.canvas.itemconfig(line, fill='blue', tags=flag)
+            self.canvas.itemconfig(gb_line, fill='blue', tags=flag)
         print('%f %f' %(gb.start_x, gb.start_y))
 
     def fileDialog(self):
@@ -182,7 +182,7 @@ class StartPage(tk.Frame):
         if self.run_btn_flags[btn['text']]:
             self.reset_gb_plan()
             self.run_btn_flags[btn['text']] = False
-        # if assign ba=eams to run flag is true, flag this btn, change color of all beams belonging to this run
+        # if assign beams to run flag is true, flag this btn, change color of all beams belonging to this run
         elif self.assign_beams_to_run_flag:
             self.reset_gb_plan()
             # enable lines
@@ -192,8 +192,10 @@ class StartPage(tk.Frame):
             self.run_btn_flags[btn['text']] = True
             btn.configure(bg = "blue")
             for line in self.gb_lines:
-                if self.canvas.gettags(line) == btn['text']:
-                    self.canvas.itemconfig(line, fill='blue')
+                tags = self.canvas.gettags(line)
+                if tags:
+                    if tags[0] == btn['text']:
+                        self.canvas.itemconfig(line, fill='blue')
         else:
             self.controller.show_frame("PageOne")
 
