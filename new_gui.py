@@ -6,7 +6,7 @@ import os
 from PlanView import PlanView
 from ReinfDiagram import ReinfDiagram
 
-from Classes import ParametersDefinedByUser, BeamRunInfo, RevGB
+from Classes import BeamRunInfo, RevGB
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
 from update_rebar import assign_from_bar_schedule, update_req_areas
@@ -57,7 +57,6 @@ class GUI(tk.Tk):
         self.show_frame("PlanView")
 
     def show_frame(self, page_name):
-        print('show_frame')
         '''Show a frame for the given page name'''
         if page_name not in self.frames:
             self.frames[page_name] 

@@ -24,7 +24,7 @@ class PlanView(Frame):
         self.canvas.pack(fill=BOTH, expand=1)
 
     def draw_all_gbs(self):
-        path = 'helper_files/revit_output.txt'
+        path = 'helper_files/revit_output_tca.txt'
         revit_output = open(path, 'r')
         lines = revit_output.readlines()
         revit_output.close()

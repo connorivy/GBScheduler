@@ -23,14 +23,18 @@ class BeamRunInfo:
         return len(self.spans)
 
 class ParametersDefinedByUser:
-    def __init__(self, fc, yield_strength, psi_t, psi_e, lam):
+    def __init__(self, fc, fy, stirrup_diam = .375, num_layers_of_top_reinf = 1, num_layers_of_bot_reinf = 1, psi_t = 1, psi_e = 1, lam = 1):
+        
         self.fc = fc
-        self.yield_strength = yield_strength
+        self.fy = fy
+        self.stirrup_diam = stirrup_diam
 
         # per ACI 318-14 table 25.4.2.4
         self.psi_t = psi_t
         self.psi_e = psi_e
         self.lam = lam
+        self.num_layers_of_top_reinf = num_layers_of_top_reinf
+        self.num_layers_of_bot_reinf = num_layers_of_bot_reinf
 
 class RebarElement:
     def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0, num_bars=0, min_num_bars=0):
@@ -74,7 +78,7 @@ class RebarElement:
             constant = 20
         else:
             constant = 25
-        ld = user_input.yield_strength * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
+        ld = user_input.fy * user_input.psi_t * user_input.psi_e / (constant*user_input.lam*math.sqrt(user_input.fc)) * bar_diameter * (1.3/12)
         
         # print('development length', ld)
         return ld
@@ -97,7 +101,6 @@ class SingleSpan:
         self.bot_rebar_elements = []
         self.stirrups = None
         self.len_prev_spans = len_prev_spans
-        self.get_min_num_bars()
 
     def get_span_info(self):
         print('\n\nspan number:           ', self.number)
@@ -120,12 +123,19 @@ class SingleSpan:
             for rebar_element in self.bot_rebar_elements:
                 rebar_element.get_rebar_info()
 
-    def get_min_num_bars(self):
-        # no more than 18" between bars
-        beam_width_no_cover = self.width - 2 * self.cover_side
-        self.min_num_bars = math.ceil(beam_width_no_cover / 18) + 1
+    def get_min_num_bars(self, user_input):
 
-        return self.min_num_bars
+        # according to ACI 318-14 24.3.2.1
+        fs = 2 / 3 * user_input.fy
+
+        # according to ACI 318-14 table 24.3.2
+        # the .625 is asumming a #5 stirrup
+        max_spacing = min(15 * 40000/fs - 2.5 * (self.cover_side + user_input.stirrup_diam), 12 * 40000/fs)
+        
+        beam_width_no_cover = self.width - 2 * (self.cover_side + user_input.stirrup_diam)
+
+        self.min_num_bars = math.ceil(beam_width_no_cover / max_spacing) + 1
+
 
         
     # def effective_depth():

@@ -30,8 +30,14 @@ class ReinfDiagram(Frame):
         if self.controller.shared_data['directory']:
             wb = xlrd.open_workbook(file)
             beam_run_info = BeamRunInfo()
-            user_input = ParametersDefinedByUser(4000, 60000, 1, 1, 1)
+            
             beam_run_info.spans, beam_run_info.max_beam_depth, beam_run_info.all_spans_len = define_spans(wb)
+
+            # create user input and use it to define stuff (specifically min num bars)
+            user_input = ParametersDefinedByUser(fc = 4000, fy = 60000)
+            for span in beam_run_info.spans:
+                span.get_min_num_bars(user_input)
+
             define_long_rebar(wb, beam_run_info)  
             add_min_reinf(beam_run_info)
             reinf_for_max_area(beam_run_info,user_input)
@@ -45,7 +51,7 @@ class ReinfDiagram(Frame):
             self.canvas.pack(fill=BOTH, expand=1)
 
     def draw_reinf_diagram(self, beam_run_info):
-        print('draw_reinf_diag')
+
         spans_length_on_screen = .8 * self.screenwidth
         length_along_screen = self.screenwidth * .1
 
@@ -71,8 +77,8 @@ class ReinfDiagram(Frame):
                 self.canvas.create_line(current_span.right_side_on_screen,bot,current_span.right_side_on_screen - self.screenheight * .02, bot + self.screenheight * .03, width=4)
                 self.canvas.create_line(current_span.right_side_on_screen,bot,current_span.right_side_on_screen + self.screenheight * .02, bot + self.screenheight * .03, width=4)
 
-            # draw frame for graph
-            print(current_span.left_side_on_screen, top, current_span.right_side_on_screen, bot)
+            # # draw frame for graph
+            # print(current_span.left_side_on_screen, top, current_span.right_side_on_screen, bot)
             self.canvas.create_rectangle(current_span.left_side_on_screen, top, current_span.right_side_on_screen, bot, outline="#000000")
             # draw centerline
             self.canvas.create_line(current_span.left_side_on_screen, mid, current_span.right_side_on_screen, mid)
@@ -120,7 +126,6 @@ class ReinfDiagram(Frame):
         # self.update_btn.pack()
 
     def update_reinf_diagram(self,beam_run_info,user_input):
-        print('update_reinf_diagram')
         self.canvas.delete("all")
 
         reinf_for_max_area(beam_run_info,user_input)
@@ -129,7 +134,6 @@ class ReinfDiagram(Frame):
         self.draw_reinf_diagram(beam_run_info)
 
     def reset(self,beam_run_info,user_input):
-        print('reset')
         self.canvas.delete("all")
 
         beam_run_info.top_rebar = []
@@ -148,7 +152,6 @@ class ReinfDiagram(Frame):
         btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.02, rely = 0.01)
 
     def back_to_plan_view(self, beam_run_info):
-        print('leave page')
         self.canvas.delete("all")
 
         beam_run_info.top_rebar = []
