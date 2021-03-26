@@ -37,13 +37,27 @@ def define_spans(wb):
                         value = 'CL'
                     else:
                         value = 'CR'
+
+                length = float(ws.cell(row,3).value)
+                width = float(ws.cell(row,4).value)
+                depth = float(ws.cell(row,5).value)
+                mid_span_loc = len_prev_spans + float(ws.cell(row,3).value) / 2
+
+                if is_num(ws.cell(row-1,3).value):
+                    prev_span_len = ws.cell(row-1,3).value
+                else:
+                    prev_span_len = 0
+                if is_num(ws.cell(row+1,3).value):
+                    next_span_len = ws.cell(row+1,3).value
+                else:
+                    next_span_len = 0
                 # returns span object with the following attributes
-                # span number (or CR / CL if cantilever), length, width, depth
-                spans.append(SingleSpan(value, float(ws.cell(row,3).value), float(ws.cell(row,4).value), float(ws.cell(row,5).value),len_prev_spans))
+                # span number (or CR / CL if cantilever), length, width, depth, len_prev_spans, mid_span_loc
+                spans.append(SingleSpan(value, length, width, depth, len_prev_spans, mid_span_loc, prev_span_len, next_span_len))
                 len_prev_spans += float(ws.cell(row,3).value)
                 max_beam_depth = max(max_beam_depth, float(ws.cell(row,5).value))
 
-    return spans, max_beam_depth, len_prev_spans
+    return spans, len_prev_spans
 
 def define_long_rebar(wb, beam_run_info):
     # open the '(29)' tab in the excel sheet and extract the data for each span

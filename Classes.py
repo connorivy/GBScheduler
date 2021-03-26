@@ -37,13 +37,14 @@ class ParametersDefinedByUser:
         self.num_layers_of_bot_reinf = num_layers_of_bot_reinf
 
 class RebarElement:
-    def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0, num_bars=0, min_num_bars=0):
+    def __init__(self, a_required=0, start_loc=100, end_loc=0, bar_size=0, num_bars=0, min_num_bars=0,idnum=-1):
         self.a_required = a_required
         self.bar_size = bar_size
         self.start_loc = start_loc
         self.end_loc = end_loc
         self.num_bars = num_bars
         self.min_num_bars = min_num_bars
+        self.idnum = idnum
         self.rebar_subtracted = False
         self.a_from_smaller = 0
         self.scheduled_shape = 'None'
@@ -84,11 +85,15 @@ class RebarElement:
         return ld
 
 class SingleSpan:
-    def __init__(self, number, length, width, depth, len_prev_spans, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
+    def __init__(self, number, length, width, depth, len_prev_spans, mid_span_loc, prev_span_len, next_span_len, fc=4000, cover_bot=3, cover_top=1.5, cover_side=2):
         self.number = number
         self.length = length
         self.width = width
         self.depth = depth
+        self.len_prev_spans = len_prev_spans
+        self.mid_span_loc = mid_span_loc
+        self.prev_span_len = prev_span_len
+        self.next_span_len = next_span_len
         self.fc = fc
         self.cover_bot = cover_bot
         self.cover_top = cover_top
@@ -100,7 +105,6 @@ class SingleSpan:
         self.top_rebar_elements = []
         self.bot_rebar_elements = []
         self.stirrups = None
-        self.len_prev_spans = len_prev_spans
 
     def get_span_info(self):
         print('\n\nspan number:           ', self.number)
@@ -129,7 +133,6 @@ class SingleSpan:
         fs = 2 / 3 * user_input.fy
 
         # according to ACI 318-14 table 24.3.2
-        # the .625 is asumming a #5 stirrup
         max_spacing = min(15 * 40000/fs - 2.5 * (self.cover_side + user_input.stirrup_diam), 12 * 40000/fs)
         
         beam_width_no_cover = self.width - 2 * (self.cover_side + user_input.stirrup_diam)

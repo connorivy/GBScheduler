@@ -6,7 +6,6 @@ import time
 from Classes import RebarElement
 from create_spans import define_spans
 from create_spans import define_long_rebar
-from create_spans import finalize_spans
 from update_rebar import assign_from_bar_schedule
 
 
@@ -130,11 +129,9 @@ def extend_neighbor_bars(new_bar, beam_run_info):
                 new_bar.end_loc = max(existing_bar.end_loc, new_bar.end_loc)
 
                 beam_run_info.top_rebar.remove(existing_bar)
-                print('bar with same area removed')
                 continue
 
             if existing_bar.a_provided > new_bar.a_provided:
-                print('new bar smaller than adjacent bar')
                 print(existing_bar.start_loc, existing_bar.end_loc)
                 smaller_bar = copy.copy(new_bar)
                 larger_bar = copy.copy(existing_bar)
@@ -157,66 +154,5 @@ def extend_neighbor_bars(new_bar, beam_run_info):
                 beam_run_info.top_rebar.remove(existing_bar)
                 beam_run_info.top_rebar.append(larger_bar)
                 new_bar = copy.copy(smaller_bar)
-                print('vol diff', vol_diff, 'in3')
                 
     beam_run_info.top_rebar.append(new_bar)
-
-    # if index_start:
-    #     surrounding_bars.append(copy_top_rebar_elements[index_start-1])
-    # if index_start != len(copy_top_rebar_elements)-1:
-    #     surrounding_bars.append(copy_top_rebar_elements[index_start+1])
-
-    # copy_top_rebar_elements.sort(key=lambda x: x.end_loc)
-    # index_end = copy_top_rebar_elements.index(new_bar)
-
-    # if index_end:
-    #     if not copy_top_rebar_elements[index_start-1] in surrounding_bars:
-    #         surrounding_bars.append(copy_top_rebar_elements[index_start-1])
-    # if index_end != len(copy_top_rebar_elements)-1:
-    #     if not copy_top_rebar_elements[index_start+1] in surrounding_bars:
-    #         surrounding_bars.append(copy_top_rebar_elements[index_start+1])
-
-    # for x in surrounding_bars:
-    #     print(x.start_loc, x.end_loc)
-
-    # # loop through bars starting and ending in the adjacent spans
-    # for bar in surrounding_bars:
-    #     # if the bar already has bars under it then ignore it
-    #     # This may be a bandaid fix and not the best solution
-    #     if bar.a_from_smaller:
-    #         continue
-
-    #     og_volume = bar.volume + new_bar.volume
-
-    #     if bar.a_provided + bar.a_from_smaller > new_bar.a_provided:
-    #         # print('new bar smaller than adjacent bar')
-    #         smaller_bar = copy.copy(new_bar)
-    #         larger_bar = copy.copy(bar)
-    #     else:
-    #         # print('new bar larger than adjacent bar')
-    #         smaller_bar = copy.copy(bar)
-    #         larger_bar = copy.copy(new_bar)
-
-    #     smaller_bar.start_loc = min(smaller_bar.start_loc, larger_bar.start_loc)
-    #     smaller_bar.end_loc = max(smaller_bar.end_loc, larger_bar.end_loc)
-
-    #     larger_bar.a_required -= smaller_bar.a_provided
-    #     larger_bar.a_from_smaller = smaller_bar.a_provided
-    #     larger_bar.bar_size , larger_bar.num_bars = get_best_rebar_sizes(larger_bar.min_num_bars - smaller_bar.num_bars, larger_bar.a_required)
-
-        
-    #     new_volume = smaller_bar.get_volume() + larger_bar.get_volume()
-    #     vol_diff = og_volume-new_volume
-    #     if vol_diff > 0:
-    #         # bar = larger_bar
-    #         # new_bar = smaller_bar
-    #         beam_run_info.top_rebar.remove(bar)
-    #         beam_run_info.top_rebar.append(larger_bar)
-    #         beam_run_info.top_rebar.append(smaller_bar)
-    #         print('vol diff', vol_diff, 'in3')
-    #         return True
-    # return False
-
-
-    # for x in beam_run_info.top_rebar:
-    #     print('start_loc',x.start_loc)

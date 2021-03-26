@@ -70,6 +70,7 @@ class GUI(tk.Tk):
         frame, geometry = self.frames[page_name]
         return frame
 
+
 class PageTwo(tk.Frame):
 
     def __init__(self, parent, controller):

@@ -3,6 +3,8 @@ from Classes import BeamRunInfo, ParametersDefinedByUser
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
 from update_rebar import assign_from_bar_schedule, update_req_areas
+from schedule_rebar import schedule_rebar
+from write_to_excel import write_to_excel
 
 import xlrd
 import copy
@@ -31,7 +33,7 @@ class ReinfDiagram(Frame):
             wb = xlrd.open_workbook(file)
             beam_run_info = BeamRunInfo()
             
-            beam_run_info.spans, beam_run_info.max_beam_depth, beam_run_info.all_spans_len = define_spans(wb)
+            beam_run_info.spans, beam_run_info.all_spans_len = define_spans(wb)
 
             # create user input and use it to define stuff (specifically min num bars)
             user_input = ParametersDefinedByUser(fc = 4000, fy = 60000)
@@ -47,6 +49,7 @@ class ReinfDiagram(Frame):
             self.create_back_btn(beam_run_info)
             self.add_update_btn(beam_run_info,user_input)
             self.add_reset_btn(beam_run_info,user_input)
+            self.add_sched_btn(beam_run_info)
             self.draw_reinf_diagram(beam_run_info)
             self.canvas.pack(fill=BOTH, expand=1)
 
@@ -56,7 +59,7 @@ class ReinfDiagram(Frame):
         length_along_screen = self.screenwidth * .1
 
         virt_depth = .15
-        top = self.screenheight * .6
+        top = self.screenheight * .7
         bot = top + self.screenheight * virt_depth
         mid = (top + bot) / 2
 
@@ -158,3 +161,30 @@ class ReinfDiagram(Frame):
         beam_run_info.rebar_req = copy.deepcopy(beam_run_info.original_rebar_req)
 
         self.controller.show_frame("PlanView")
+
+    def add_sched_btn(self, beam_run_info):
+        btn = Button(self, text = 'SCHEDULE REBAR', command=lambda: self.add_rebar_to_global_schedule(beam_run_info))
+        btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.13)
+
+    def add_rebar_to_global_schedule(self,beam_run_info):
+        values = schedule_rebar(beam_run_info)
+        write_to_excel(values)
+        
+
+# from pandastable import Table, TableModel
+# class PageTwo(tk.Frame):
+
+#     def __init__(self, parent, controller):
+#         self.parent = parent
+#         self.controller = controller
+#         Frame.__init__(self)
+#         self.main = self.master
+#         self.main.geometry('600x400+200+100')
+#         self.main.title('Table app')
+#         f = Frame(self.main)
+#         f.pack(fill=BOTH,expand=1)
+#         df = TableModel.getSampleData()
+#         self.table = pt = Table(f, dataframe=df,
+#                                 showtoolbar=True, showstatusbar=True)
+#         pt.show()
+#         return
