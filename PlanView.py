@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog
+from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, FLAT, LEFT
 from Classes import RevGB
 import os
 
@@ -19,9 +19,10 @@ class PlanView(Frame):
         self.screenwidth_padding = float(self.screenwidth * .1)
         self.screenheight_padding = float(self.screenheight * .1)
 
+        self.draw_plan_view_toolbar()
+
         self.draw_all_gbs()
-        self.add_browse_btn()
-        self.canvas.pack(fill=BOTH, expand=1)
+        self.canvas.place(relheight = 1, relwidth = 1, relx = 0, rely = 0)
 
     def draw_all_gbs(self):
         path = 'helper_files/revit_output_tca.txt'
@@ -57,11 +58,7 @@ class PlanView(Frame):
             self.gb_lines.append(gb_line)
 
             self.canvas.tag_bind(gb_line, '<ButtonPress-1>', lambda event, gb = gb, gb_line = gb_line: self.add_to_active_run(event, gb, gb_line))
-            self.canvas.pack()
-
-    def add_browse_btn(self):
-        self.browse_button = Button(self, text = "BROWSE", command = lambda:self.fileDialog())
-        self.browse_button.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
+            self.canvas.place()
 
     def add_to_active_run(self, event, gb, gb_line):
         active_flag = 'None'
@@ -91,12 +88,12 @@ class PlanView(Frame):
         self.run_btn_flags = {}
         self.assign_beams_to_run_flag = False
         for run in range(len(run_names)):
-            self.run_btns[run_names[run]] = Button(self, text = run_names[run], command=lambda run_name = run_names[run]: self.run_btn_pushed(self.run_btns[run_name]))
-            self.run_btns[run_names[run]].place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.07 + .06*run)
+            self.run_btns[run_names[run]] = Button(self.toolbar, text = run_names[run], command=lambda run_name = run_names[run]: self.run_btn_pushed(self.run_btns[run_name]))
+            self.run_btns[run_names[run]].place(relheight = 0.9, relwidth = 0.05, relx = 0.215 + .055*run, rely = 0.05)
             self.run_btn_flags[run_names[run]] = False
 
-        btn = Button(self, text = 'Assign Beams to Run', command=lambda: self.assign_beams_to_run(btn))
-        btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.785, rely = 0.01)
+        btn = Button(self.toolbar, text = 'Assign Beams to Run', command=lambda: self.assign_beams_to_run(btn))
+        btn.place(relheight = 0.9, relwidth = 0.05, relx = 0.06, rely = 0.05)
 
 
     def assign_beams_to_run(self, btn):
@@ -157,3 +154,15 @@ class PlanView(Frame):
         # disable lines
         for line in self.gb_lines:
                 self.canvas.itemconfig(line, state='disabled')
+
+    def draw_plan_view_toolbar(self):
+        self.toolbar = Frame(self, bg = 'dark gray')
+        self.toolbar.place(relheight = 0.08, relwidth = 1, relx = 0, rely = 0)
+
+        b1 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text="Browse",
+        command= self.fileDialog)
+        b1.place(relheight = .9, relwidth = 0.05, relx = .005, rely = 0.05)

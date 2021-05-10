@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog
+from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Label, FLAT, LEFT
 from Classes import BeamRunInfo, ParametersDefinedByUser
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -46,12 +46,17 @@ class ReinfDiagram(Frame):
             assign_from_bar_schedule(beam_run_info)
             update_req_areas(beam_run_info)
 
-            self.create_back_btn(beam_run_info)
-            self.add_update_btn(beam_run_info,user_input)
-            self.add_reset_btn(beam_run_info,user_input)
-            self.add_sched_btn(beam_run_info)
+            self.draw_reinf_diag_toolbar(beam_run_info, user_input)
+            # self.create_back_btn(beam_run_info)
+            # self.add_update_btn(beam_run_info,user_input)
+            # self.add_reset_btn(beam_run_info,user_input)
+            # self.add_sched_btn(beam_run_info)
             self.draw_reinf_diagram(beam_run_info)
-            self.canvas.pack(fill=BOTH, expand=1)
+
+            self.table = PageTwo(self, self.controller)
+            self.table.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
+
+            self.canvas.place(relwidth = 1, relheight = 1 - .08, relx = 0, rely = 0.08)
 
     def draw_reinf_diagram(self, beam_run_info):
 
@@ -110,7 +115,7 @@ class ReinfDiagram(Frame):
             line = self.canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 4, fill="Black", activefill="Red")
             
             self.canvas.tag_bind(line, '<ButtonPress-1>', lambda event, element = element: self.on_click(event, element))
-            self.canvas.pack()
+            self.canvas.place()
 
             element.drawn = True
 
@@ -118,15 +123,15 @@ class ReinfDiagram(Frame):
         print('\n\n\n')
         element.get_rebar_info()
 
-    def add_reset_btn(self, beam_run_info, user_input):
-        self.update_btn = Button(self, text="RESET", command = lambda:self.reset(beam_run_info,user_input))
-        self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.07)
-        # self.update_btn.pack()
+    # def add_reset_btn(self, beam_run_info, user_input):
+    #     self.update_btn = Button(self, text="RESET", command = lambda:self.reset(beam_run_info,user_input))
+    #     self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.07)
+    #     # self.update_btn.pack()
 
-    def add_update_btn(self, beam_run_info, user_input):
-        self.update_btn = Button(self, text="UPDATE", command = lambda:self.update_reinf_diagram(beam_run_info,user_input))
-        self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
-        # self.update_btn.pack()
+    # def add_update_btn(self, beam_run_info, user_input):
+    #     self.update_btn = Button(self, text="UPDATE", command = lambda:self.update_reinf_diagram(beam_run_info,user_input))
+    #     self.update_btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.01)
+    #     # self.update_btn.pack()
 
     def update_reinf_diagram(self,beam_run_info,user_input):
         self.canvas.delete("all")
@@ -148,11 +153,11 @@ class ReinfDiagram(Frame):
 
         self.draw_reinf_diagram(beam_run_info)
 
-    def create_back_btn(self, beam_run_info):
-        btn = Button(self, text = 'Back', command=lambda: self.back_to_plan_view(beam_run_info))
-        # button = tk.Button(self, text="Go to the start page",
-        #                     command=lambda: self.controller.show_frame("PlanView"))
-        btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.02, rely = 0.01)
+    # def create_back_btn(self, beam_run_info):
+    #     btn = Button(self, text = 'Back', command=lambda: self.back_to_plan_view(beam_run_info))
+    #     # button = tk.Button(self, text="Go to the start page",
+    #     #                     command=lambda: self.controller.show_frame("PlanView"))
+    #     btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.02, rely = 0.01)
 
     def back_to_plan_view(self, beam_run_info):
         self.canvas.delete("all")
@@ -162,24 +167,78 @@ class ReinfDiagram(Frame):
 
         self.controller.show_frame("PlanView")
 
-    def add_sched_btn(self, beam_run_info):
-        btn = Button(self, text = 'SCHEDULE REBAR', command=lambda: self.add_rebar_to_global_schedule(beam_run_info))
-        btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.13)
+    # def add_sched_btn(self, beam_run_info):
+    #     btn = Button(self, text = 'SCHEDULE REBAR', command=lambda: self.add_rebar_to_global_schedule(beam_run_info))
+    #     btn.place(relheight = 0.05, relwidth = 0.1, relx = 0.89, rely = 0.13)
 
     def add_rebar_to_global_schedule(self,beam_run_info):
         values = schedule_rebar(beam_run_info)
+        self.controller.show_frame("PageTwo")
         write_to_excel(values)
+
+    def draw_reinf_diag_toolbar(self, beam_run_info, user_input):
+        self.toolbar = Frame(self, bg = 'dark gray')
+        self.toolbar.place(relheight = 0.08, relwidth = 1, relx = 0, rely = 0)
+
+        b1 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text="Back",
+        command= lambda: self.back_to_plan_view(beam_run_info))
+        b1.place(relheight = .9, relwidth = 0.05, relx = .005, rely = 0.05)
+
+        b2 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text="Update",
+        command= lambda: self.update_reinf_diagram(beam_run_info,user_input))
+        b2.place(relheight = .9, relwidth = 0.05, relx = .06, rely = 0.05)
+
+        b3 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text="Reset",
+        command= lambda: lambda:self.reset(beam_run_info,user_input))
+        b3.place(relheight = .9, relwidth = 0.05, relx = .115, rely = 0.05)
+
+        b4 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text="Schedule",
+        command= lambda: lambda:self.add_rebar_to_global_schedule(beam_run_info))
+        b4.place(relheight = .9, relwidth = 0.05, relx = .17, rely = 0.05)
+
+from pandastable import Table, TableModel
+import pandas
+import openpyxl
+
+class PageTwo(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
         
+        f = Frame(self.master)
+        f.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
+        
+        df = pandas.read_excel('helper_files\Grade Beam Schedule - BLANK.xlsx', engine='openpyxl')
 
-# from pandastable import Table, TableModel
-# class PageTwo(tk.Frame):
+        self.table = pt = Table(f, dataframe=df,
+                                showtoolbar=True, showstatusbar=True)
+        pt.show()
 
-#     def __init__(self, parent, controller):
+
+# class PageTwo(Frame):
+#     """Basic test frame for the table"""
+#     def __init__(self, parent=None):
 #         self.parent = parent
-#         self.controller = controller
 #         Frame.__init__(self)
 #         self.main = self.master
-#         self.main.geometry('600x400+200+100')
+#         self.main.geometry("{0}x{1}+0+0".format(self.screenwidth, self.screenheight))
 #         self.main.title('Table app')
 #         f = Frame(self.main)
 #         f.pack(fill=BOTH,expand=1)

@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog
+from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Menu
 import xlrd
 import copy
 import os
@@ -14,7 +14,7 @@ from update_rebar import assign_from_bar_schedule, update_req_areas
 
 TITLE_FONT = ("Helvetica", 18, "bold")
 
-class GUI(tk.Tk):
+class GUI(Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -25,25 +25,28 @@ class GUI(tk.Tk):
         }
 
         pad = 3
-        self.screenwidth = self.winfo_screenwidth()-pad
-        self.screenheight = self.winfo_screenheight()-pad
+        self.screenwidth = self.winfo_screenwidth()
+        self.screenheight = self.winfo_screenheight()
         self.usable_screenwidth = float(self.screenwidth * .8)
         self.usable_screenheight = float(self.screenheight * .8)
         self.screenwidth_padding = float(self.screenwidth * .1)
         self.screenheight_padding = float(self.screenheight * .1)
 
         geom = "{0}x{1}+0+0".format(self.screenwidth, self.screenheight)
+        # print(geom)
+
+        table_geom = "{0}x{1}+{2}+{3}".format(int(self.screenwidth/2), int(self.screenheight/5), int(self.screenwidth/3), int(self.screenheight/3))
 
         # the container is where we'll stack a bunch of frames
         # on top of each other, then the one we want visible
         # will be raised above the others
-        self.container = tk.Frame(self)
+        self.container = Frame(self)
         self.container.pack(side="top", fill="both", expand=True)
         self.container.grid_rowconfigure(0, weight=1)
         self.container.grid_columnconfigure(0, weight=1)
 
         self.frames = {}
-        for F,geometry in zip((PlanView, ReinfDiagram, PageTwo), (geom, geom, geom)):
+        for F,geometry in zip((PlanView, ReinfDiagram, PageTwo), (geom, geom, table_geom)):
             page_name = F.__name__
             frame = F(parent=self.container, controller=self)
             # store the frame and the geometry for this frame
@@ -83,7 +86,38 @@ class PageTwo(tk.Frame):
         button.pack()
 
 
+def create_menu(appl):
+    # create menu bar
+    menu_bar = Menu(app)
+    app.config(menu=menu_bar)
+    # add item to menu bar
+    file_menu = Menu(menu_bar, tearoff=0) # create file menu
+    # add file-menu to menu bar with label
+    menu_bar.add_cascade(label="File", menu=file_menu)
+    # add commands to File menu
+    file_menu.add_command(label="New") # add new to file menu
+    file_menu.add_command(label="Open")
+    file_menu.add_command(label="Save")
+    file_menu.add_separator()
+    file_menu.add_command(label="Exit", command=exit_qk)
+    # self.run_btns[run_names[run]] = Button(self, text = run_names[run], command=lambda run_name = run_names[run]: self.run_btn_pushed(self.run_btns[run_name]))
+
+    help_menu = Menu(menu_bar, tearoff=0) # create help menu
+    # add help-menu to menu bar with label
+    menu_bar.add_cascade(label="Help", menu=help_menu)
+    # add commands to File menu
+    help_menu.add_command(label="Help") # add new to help menu
+    help_menu.add_separator()
+    help_menu.add_command(label="Credits") # add new to help menu
+    help_menu.add_command(label="About")
+
+def exit_qk():
+    app.quit()
+    app.destroy()
+    exit()
+
 if __name__ == "__main__":
     # root = tk.Tk()
     app = GUI()
+    create_menu(app)
     app.mainloop()
