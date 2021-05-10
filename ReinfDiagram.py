@@ -19,9 +19,10 @@ class ReinfDiagram(Frame):
         self.screenwidth = self.winfo_screenwidth()-pad
         self.screenheight = self.winfo_screenheight()-pad
         self.usable_screenwidth = float(self.screenwidth * .8)
-        self.usable_screenheight = float(self.screenheight * .8)
-        self.screenwidth_padding = float(self.screenwidth * .1)
-        self.screenheight_padding = float(self.screenheight * .1)
+        self.usable_screenheight = float(self.screenheight * .92)
+        self.screenwidth_padding = float(self.screenwidth * .05)
+        self.screenheight_padding = float(self.screenheight * .05)
+        self.virt_depth = .15
         self.controller = controller
         self.canvas = Canvas(self)
 
@@ -53,19 +54,18 @@ class ReinfDiagram(Frame):
             # self.add_sched_btn(beam_run_info)
             self.draw_reinf_diagram(beam_run_info)
 
-            self.table = PageTwo(self, self.controller)
-            self.table.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
+            # self.table = PageTwo(self, self.controller)
+            # self.table.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
 
             self.canvas.place(relwidth = 1, relheight = 1 - .08, relx = 0, rely = 0.08)
 
     def draw_reinf_diagram(self, beam_run_info):
 
-        spans_length_on_screen = .8 * self.screenwidth
-        length_along_screen = self.screenwidth * .1
+        spans_length_on_screen = self.usable_screenwidth
+        length_along_screen = self.screenwidth_padding
 
-        virt_depth = .15
-        top = self.screenheight * .7
-        bot = top + self.screenheight * virt_depth
+        top = self.usable_screenheight * .7
+        bot = top + self.usable_screenheight * self.virt_depth
         mid = (top + bot) / 2
 
         for current_span in beam_run_info.spans:
@@ -93,7 +93,7 @@ class ReinfDiagram(Frame):
 
         # draw little lines representing rebar required
         for rebar_req in beam_run_info.original_rebar_req:
-            tick_left = self.screenwidth * .1 + spans_length_on_screen * rebar_req[0] / beam_run_info.all_spans_len
+            tick_left = self.screenwidth_padding + spans_length_on_screen * rebar_req[0] / beam_run_info.all_spans_len
             tick_top = mid - (mid - top) * rebar_req[1] / beam_run_info.max_rebar_area
             tick_bot = mid + (mid - top) * rebar_req[2] / beam_run_info.max_rebar_area
             self.canvas.create_line(tick_left, tick_top, tick_left, tick_bot)
@@ -101,9 +101,9 @@ class ReinfDiagram(Frame):
         self.draw_rebar(beam_run_info, mid)       
 
     def draw_rebar(self, beam_run_info, mid):
-        length_along_screen = self.screenwidth * .1
-        spans_length_on_screen = .8 * self.screenwidth
-        half_diagram_height = self.screenheight * .075
+        length_along_screen = self.screenwidth_padding
+        spans_length_on_screen = self.usable_screenwidth
+        half_diagram_height = self.usable_screenheight * self.virt_depth * .5
 
         top_rebar_elements = beam_run_info.top_rebar
         top_rebar_elements.sort(key=lambda x: x.a_provided)
