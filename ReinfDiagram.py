@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Label, FLAT, LEFT
+from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Label, FLAT, LEFT, ttk, Scrollbar, VERTICAL, RIGHT, Y
 from Classes import BeamRunInfo, ParametersDefinedByUser
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -18,11 +18,31 @@ class ReinfDiagram(Frame):
         pad = 3
         self.screenwidth = self.winfo_screenwidth()-pad
         self.screenheight = self.winfo_screenheight()-pad
-        self.usable_screenwidth = float(self.screenwidth * .8)
-        self.usable_screenheight = float(self.screenheight * .92)
-        self.screenwidth_padding = float(self.screenwidth * .05)
-        self.screenheight_padding = float(self.screenheight * .05)
-        self.virt_depth = .15
+        # self.usable_screenwidth =       float(self.screenwidth * .8)
+        # self.usable_screenheight =      float(self.screenheight * .92)
+        # self.screenwidth_padding =      float(self.screenwidth * .05)
+        # self.screenheight_padding =     float(self.screenheight * .05)
+
+        self.toolbar_x0 = 0
+        self.toolbar_y0 = 0
+        self.toolbar_width = 1
+        self.toolbar_height = .08
+
+        self.diagram_x0 = .05
+        self.diagram_y0 = .6
+        self.diagram_width = .8
+        self.diagram_height = .15
+
+        self.top_of_sched_x0 = .05
+        self.top_of_sched_y0 = self.toolbar_height + .01
+        self.top_of_sched_width = .8
+        self.top_of_sched_height = .15
+
+        self.table_x0 = .05
+        self.table_y0 = self.top_of_sched_y0 + self.top_of_sched_height
+        self.table_width = .8
+        self.table_height = .3
+
         self.controller = controller
         self.canvas = Canvas(self)
 
@@ -48,6 +68,12 @@ class ReinfDiagram(Frame):
             update_req_areas(beam_run_info)
 
             self.draw_reinf_diag_toolbar(beam_run_info, user_input)
+
+            table_params = [self.table_width, self.table_height, self.table_x0, self.table_y0]
+            
+            self.draw_top_of_sched()
+            self.table = PageTwo(self, self.controller, table_params[0], table_params[1], table_params[2], table_params[3])
+            # self.table.place(relwidth = self.usable_screenwidth, relheight = 0.5 * self.usable_screenheight, relx = 0.1, rely = 0.2)
             # self.create_back_btn(beam_run_info)
             # self.add_update_btn(beam_run_info,user_input)
             # self.add_reset_btn(beam_run_info,user_input)
@@ -57,15 +83,15 @@ class ReinfDiagram(Frame):
             # self.table = PageTwo(self, self.controller)
             # self.table.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
 
-            self.canvas.place(relwidth = 1, relheight = 1 - .08, relx = 0, rely = 0.08)
+            self.canvas.place(relwidth = 1, relheight = 1, relx = 0, rely = 0)
 
     def draw_reinf_diagram(self, beam_run_info):
 
-        spans_length_on_screen = self.usable_screenwidth
-        length_along_screen = self.screenwidth_padding
+        spans_length_on_screen = self.diagram_width * self.screenwidth
+        length_along_screen = self.diagram_x0 * self.screenwidth
 
-        top = self.usable_screenheight * .7
-        bot = top + self.usable_screenheight * self.virt_depth
+        top = self.diagram_y0 * self.screenheight
+        bot = top + self.diagram_height * self.screenheight
         mid = (top + bot) / 2
 
         for current_span in beam_run_info.spans:
@@ -93,7 +119,7 @@ class ReinfDiagram(Frame):
 
         # draw little lines representing rebar required
         for rebar_req in beam_run_info.original_rebar_req:
-            tick_left = self.screenwidth_padding + spans_length_on_screen * rebar_req[0] / beam_run_info.all_spans_len
+            tick_left = self.diagram_x0 * self.screenwidth + spans_length_on_screen * rebar_req[0] / beam_run_info.all_spans_len
             tick_top = mid - (mid - top) * rebar_req[1] / beam_run_info.max_rebar_area
             tick_bot = mid + (mid - top) * rebar_req[2] / beam_run_info.max_rebar_area
             self.canvas.create_line(tick_left, tick_top, tick_left, tick_bot)
@@ -101,9 +127,9 @@ class ReinfDiagram(Frame):
         self.draw_rebar(beam_run_info, mid)       
 
     def draw_rebar(self, beam_run_info, mid):
-        length_along_screen = self.screenwidth_padding
-        spans_length_on_screen = self.usable_screenwidth
-        half_diagram_height = self.usable_screenheight * self.virt_depth * .5
+        length_along_screen = self.diagram_x0 * self.screenwidth
+        spans_length_on_screen = self.diagram_width * self.screenwidth
+        half_diagram_height = self.diagram_height * self.screenheight * .5
 
         top_rebar_elements = beam_run_info.top_rebar
         top_rebar_elements.sort(key=lambda x: x.a_provided)
@@ -178,7 +204,7 @@ class ReinfDiagram(Frame):
 
     def draw_reinf_diag_toolbar(self, beam_run_info, user_input):
         self.toolbar = Frame(self, bg = 'dark gray')
-        self.toolbar.place(relheight = 0.08, relwidth = 1, relx = 0, rely = 0)
+        self.toolbar.place(relheight = self.toolbar_height, relwidth = self.toolbar_width, relx = 0, rely = 0)
 
         b1 = Button(
         self.toolbar,
@@ -212,24 +238,88 @@ class ReinfDiagram(Frame):
         command= lambda: lambda:self.add_rebar_to_global_schedule(beam_run_info))
         b4.place(relheight = .9, relwidth = 0.05, relx = .17, rely = 0.05)
 
+    def draw_top_of_sched(self):
+        x0 = self.top_of_sched_x0 * self.screenwidth
+        y0 = self.top_of_sched_y0 * self.screenheight
+        width = self.top_of_sched_width * self.screenwidth
+        height = self.top_of_sched_height * self.screenheight
+
+        col_width = width / 16
+
+
+        # border starting with left vertical and going clockwise
+        self.canvas.create_line(x0, y0, x0, y0 + height)
+        self.canvas.create_line(x0, y0, x0 + width, y0)
+        self.canvas.create_line(x0 + width, y0, x0 + width, y0 + height)
+        self.canvas.create_line(x0, y0 + height, x0 + width, y0 + height)
+        # middle line
+        self.canvas.create_line(x0, y0 + height/2, x0 + width, y0 + height/2)
+        # first 3 dividing lines
+        self.canvas.create_line(x0 + 1 * col_width, y0 + height/2, x0 + 1 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 2 * col_width, y0 + height/2, x0 + 2 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 3 * col_width, y0 + height/2, x0 + 3 * col_width, y0 + height)
+        # 3/4 down horizontal line
+        self.canvas.create_line(x0 + 3 * col_width, y0 + 3 * height / 4, x0 + 15 * col_width, y0 + 3 * height / 4)
+        # next three (half sized) dividing lines
+        self.canvas.create_line(x0 + 5 * col_width, y0 + 3 * height / 4, x0 + 5 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 7 * col_width, y0 + 3 * height / 4, x0 + 7 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 9 * col_width, y0 + 3 * height / 4, x0 + 9 * col_width, y0 + height)
+        # next half sized line
+        self.canvas.create_line(x0 + 11 * col_width, y0 + height / 2, x0 + 11 * col_width, y0 + height)
+        # last 2 quarter length lines
+        self.canvas.create_line(x0 + 12 * col_width, y0 + 3 * height / 4, x0 + 12 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 13 * col_width, y0 + 3 * height / 4, x0 + 13 * col_width, y0 + height)
+        # last half sized line
+        self.canvas.create_line(x0 + 15 * col_width, y0 + 3 * height / 4, x0 + 15 * col_width, y0 + height)
+
 from pandastable import Table, TableModel
 import pandas
 import openpyxl
 
 class PageTwo(Frame):
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, width, height, x, y):
+        super().__init__()
         Frame.__init__(self, parent)
         self.controller = controller
         
         f = Frame(self.master)
-        f.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
-        
-        df = pandas.read_excel('helper_files\Grade Beam Schedule - BLANK.xlsx', engine='openpyxl')
+        f.place(relwidth = width, relheight = height, relx = x, rely = y)
 
-        self.table = pt = Table(f, dataframe=df,
-                                showtoolbar=True, showstatusbar=True)
-        pt.show()
+        tv = ttk.Treeview(f, columns=(1,2,3,4,5,6,7,8,9,10,11), show='tree')
+        tv.pack(side=LEFT)
+
+        sb = Scrollbar(f, orient=VERTICAL)
+        sb.pack(side=RIGHT, fill=Y)
+
+        tv.config(yscrollcommand=sb.set)
+        sb.config(command=tv.yview)
+
+
+        tv.column("#0",minwidth=0,width=50)
+        tv.insert(parent='', index=0, iid=0, values=("vineet", "e11", 1000000.00))
+        tv.insert(parent='', index=1, iid=1, values=("anil", "e12", 120000.00))
+        tv.insert(parent='', index=2, iid=2, values=("ankit", "e13", 41000.00))
+        tv.insert(parent='', index=3, iid=3, values=("Shanti", "e14", 22000.00))
+        tv.insert(parent='', index=4, iid=4, values=("vineet", "e11", 1000000.00))
+        tv.insert(parent='', index=5, iid=5, values=("anil", "e12", 120000.00))
+        tv.insert(parent='', index=6, iid=6, values=("ankit", "e13", 41000.00))
+        tv.insert(parent='', index=7, iid=7, values=("Shanti", "e14", 22000.00))
+        tv.insert(parent='', index=8, iid=8, values=("vineet", "e11", 1000000.00))
+        tv.insert(parent='', index=9, iid=9, values=("anil", "e12", 120000.00))
+        tv.insert(parent='', index=10, iid=10, values=("ankit", "e13", 41000.00))
+        tv.insert(parent='', index=11, iid=11, values=("Shanti", "e14", 22000.00))
+
+        style = ttk.Style()
+        style.theme_use("default")
+        style.map("Treeview")
+
+    def update_item(tv):
+            selected = tv.focus()
+            temp = tv.item(selected, 'values')
+            sal_up = float(temp[2]) + float(temp[2]) * 0.05
+            tv.item(selected, values=(temp[0], temp[1], sal_up))
+
 
 
 # class PageTwo(Frame):
