@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Label, FLAT, LEFT, ttk, Scrollbar, VERTICAL, RIGHT, Y
+from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Label, FLAT, LEFT, TOP, ttk, Scrollbar, VERTICAL, RIGHT, Y, CENTER
 from Classes import BeamRunInfo, ParametersDefinedByUser
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -15,7 +15,7 @@ class ReinfDiagram(Frame):
         super().__init__()
         Frame.__init__(self, parent)
 
-        pad = 3
+        pad = 0
         self.screenwidth = self.winfo_screenwidth()-pad
         self.screenheight = self.winfo_screenheight()-pad
         # self.usable_screenwidth =       float(self.screenwidth * .8)
@@ -29,18 +29,18 @@ class ReinfDiagram(Frame):
         self.toolbar_height = .08
 
         self.diagram_x0 = .05
-        self.diagram_y0 = .6
+        self.diagram_y0 = .7
         self.diagram_width = .8
         self.diagram_height = .15
 
         self.top_of_sched_x0 = .05
         self.top_of_sched_y0 = self.toolbar_height + .01
         self.top_of_sched_width = .8
-        self.top_of_sched_height = .15
+        self.top_of_sched_height = .25
 
         self.table_x0 = .05
         self.table_y0 = self.top_of_sched_y0 + self.top_of_sched_height
-        self.table_width = .8
+        self.table_width = .801
         self.table_height = .3
 
         self.controller = controller
@@ -245,6 +245,8 @@ class ReinfDiagram(Frame):
         height = self.top_of_sched_height * self.screenheight
 
         col_width = width / 16
+        top_len = .4 * height
+        bot_len = height - top_len
 
 
         # border starting with left vertical and going clockwise
@@ -253,28 +255,39 @@ class ReinfDiagram(Frame):
         self.canvas.create_line(x0 + width, y0, x0 + width, y0 + height)
         self.canvas.create_line(x0, y0 + height, x0 + width, y0 + height)
         # middle line
-        self.canvas.create_line(x0, y0 + height/2, x0 + width, y0 + height/2)
+        self.canvas.create_line(x0, y0 + top_len, x0 + width, y0 + top_len)
         # first 3 dividing lines
-        self.canvas.create_line(x0 + 1 * col_width, y0 + height/2, x0 + 1 * col_width, y0 + height)
-        self.canvas.create_line(x0 + 2 * col_width, y0 + height/2, x0 + 2 * col_width, y0 + height)
-        self.canvas.create_line(x0 + 3 * col_width, y0 + height/2, x0 + 3 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 1 * col_width, y0 + top_len, x0 + 1 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 2 * col_width, y0 + top_len, x0 + 2 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 3 * col_width, y0 + top_len, x0 + 3 * col_width, y0 + height)
         # 3/4 down horizontal line
-        self.canvas.create_line(x0 + 3 * col_width, y0 + 3 * height / 4, x0 + 15 * col_width, y0 + 3 * height / 4)
+        self.canvas.create_line(x0 + 3 * col_width, y0 + top_len + bot_len / 2, x0 + 15 * col_width, y0 + top_len + bot_len / 2)
         # next three (half sized) dividing lines
-        self.canvas.create_line(x0 + 5 * col_width, y0 + 3 * height / 4, x0 + 5 * col_width, y0 + height)
-        self.canvas.create_line(x0 + 7 * col_width, y0 + 3 * height / 4, x0 + 7 * col_width, y0 + height)
-        self.canvas.create_line(x0 + 9 * col_width, y0 + 3 * height / 4, x0 + 9 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 5 * col_width, y0 + top_len + bot_len / 2, x0 + 5 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 7 * col_width, y0 + top_len + bot_len / 2, x0 + 7 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 9 * col_width, y0 + top_len + bot_len / 2, x0 + 9 * col_width, y0 + height)
         # next half sized line
-        self.canvas.create_line(x0 + 11 * col_width, y0 + height / 2, x0 + 11 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 11 * col_width, y0 + top_len, x0 + 11 * col_width, y0 + height)
         # last 2 quarter length lines
-        self.canvas.create_line(x0 + 12 * col_width, y0 + 3 * height / 4, x0 + 12 * col_width, y0 + height)
-        self.canvas.create_line(x0 + 13 * col_width, y0 + 3 * height / 4, x0 + 13 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 12 * col_width, y0 + top_len + bot_len / 2, x0 + 12 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 13 * col_width, y0 + top_len + bot_len / 2, x0 + 13 * col_width, y0 + height)
         # last half sized line
-        self.canvas.create_line(x0 + 15 * col_width, y0 + 3 * height / 4, x0 + 15 * col_width, y0 + height)
+        self.canvas.create_line(x0 + 15 * col_width, y0 + top_len, x0 + 15 * col_width, y0 + height)
 
-from pandastable import Table, TableModel
-import pandas
-import openpyxl
+        self.canvas.create_text(x0 + width/2, y0 + top_len / 2, text = "CONCRETE GRADE BEAM SCHEDULE", justify = CENTER)
+        self.canvas.create_text(x0 + 7 * col_width, y0 + top_len + bot_len / 4, text = "MILD REINFORCING", justify = CENTER)
+        self.canvas.create_text(x0 + 13 * col_width, y0 + top_len + bot_len / 4, text = "STIRRUPS", justify = CENTER)
+        self.canvas.create_text(x0 + col_width / 2, y0 + top_len + bot_len / 2, text = "MARK", justify = CENTER)
+        self.canvas.create_text(x0 + 1 * col_width + col_width / 2, y0 + top_len + bot_len / 2, text = "WIDTH\n(IN.)", justify = CENTER)
+        self.canvas.create_text(x0 + 2 * col_width + col_width / 2, y0 + top_len + bot_len / 2, text = "DEPTH\n(IN.)", justify = CENTER)
+        self.canvas.create_text(x0 + 15 * col_width + col_width / 2, y0 + top_len + bot_len / 2, text = "SPECIAL\nNOTES", justify = CENTER)
+        self.canvas.create_text(x0 + 4 * col_width, y0 + top_len + bot_len * 3/4, text = "LEFT END\nTOP BARS", justify = CENTER)
+        self.canvas.create_text(x0 + 6 * col_width, y0 + top_len + bot_len * 3/4, text = "CENTER\nBOTTOM BARS", justify = CENTER)
+        self.canvas.create_text(x0 + 8 * col_width, y0 + top_len + bot_len * 3/4, text = "CENTER\nTOP BARS", justify = CENTER)
+        self.canvas.create_text(x0 + 10 * col_width, y0 + top_len + bot_len * 3/4, text = "RIGHT END\nTOP BARS", justify = CENTER)
+        self.canvas.create_text(x0 + 11 * col_width + col_width / 2, y0 + top_len + bot_len * 3/4, text = "SIZE", justify = CENTER)
+        self.canvas.create_text(x0 + 12 * col_width + col_width / 2, y0 + top_len + bot_len * 3/4, text = "TYPE", justify = CENTER)
+        self.canvas.create_text(x0 + 14 * col_width, y0 + top_len + bot_len * 3/4, text = "SPACING\nEACH END", justify = CENTER)
 
 class PageTwo(Frame):
 
@@ -283,14 +296,15 @@ class PageTwo(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
         
-        f = Frame(self.master)
+        f = Frame(self.master, bg = 'pink')
         f.place(relwidth = width, relheight = height, relx = x, rely = y)
+        # f.pack(side=TOP)
 
         tv = ttk.Treeview(f, columns=(1,2,3,4,5,6,7,8,9,10,11), show='tree')
-        tv.pack(side=LEFT)
+        tv.place(relwidth = 1, relheight = 1, relx = 0, rely = 0)
 
         sb = Scrollbar(f, orient=VERTICAL)
-        sb.pack(side=RIGHT, fill=Y)
+        sb.place(relwidth = .015, relheight = 1, relx = .985, rely = 0)
 
         tv.config(yscrollcommand=sb.set)
         sb.config(command=tv.yview)
