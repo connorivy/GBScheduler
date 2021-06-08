@@ -1,34 +1,84 @@
 import copy
+import glob
+import xlrd
+from Classes import BeamRunInfo, ParametersDefinedByUser
+from create_spans import define_spans, define_long_rebar, is_num
+from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
+from update_rebar import assign_from_bar_schedule, update_req_areas
+from write_to_excel import write_to_excel
 
-def schedule_rebar(beam_run_info):
+def create_gb_sched(filename, run_names):
+    all_beam_runs = {}
+    for run in run_names:
+        path = filename + '/' + run
+        filenames = glob.glob(path + "/*.xls")
+        print(filenames)
+
+        for file in filenames:
+            wb = xlrd.open_workbook(file)
+            beam_run_info = BeamRunInfo()
+            beam_run_info.run_name = run
+            beam_run_info.spans, beam_run_info.all_spans_len = define_spans(wb)
+
+            # create user input and use it to define stuff (specifically min num bars)
+            user_input = ParametersDefinedByUser(fc = 4000, fy = 60000)
+            for span in beam_run_info.spans:
+                span.get_min_num_bars(user_input)
+
+            define_long_rebar(wb, beam_run_info)  
+            add_min_reinf(beam_run_info)
+
+            loops = 0
+            while not beam_run_info and loops < 25:
+                loops += 1
+                reinf_for_max_area(beam_run_info,user_input)
+                beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
+
+            all_beam_runs[run] = beam_run_info
+
+    values = schedule_rebar(all_beam_runs)
+    write_to_excel(values)
+
+def schedule_rebar(all_beam_runs):
     # print('schedule rebar')
-    num_spans = len(beam_run_info.spans)
     schedule_values = []
-    center_top_bars = '-'
-    center_bottom_bars = '-'
+    for key in all_beam_runs.keys():
+        beam_run_info = all_beam_runs[key]
+        num_spans = len(beam_run_info.spans)
+        center_top_bars = '-'
+        center_bottom_bars = '-'
 
-    for current_span_num in range(num_spans):
-        current_span = beam_run_info.spans[current_span_num]
+        for current_span_num in range(num_spans):
+            current_span = beam_run_info.spans[current_span_num]
 
-        # ASSUMPTION - only single spans have top center rebar
-        if num_spans == 1:
-            loc = current_span.mid_span_loc
-            center_bottom_bars = schedule_bot_rebar(beam_run_info, loc, current_span)
-            center_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
+            # ASSUMPTION - only single spans have top center rebar
+            if num_spans == 1:
+                loc = current_span.mid_span_loc
+                center_bottom_bars = schedule_bot_rebar(beam_run_info, loc, current_span)
+                center_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
 
-        else:
-            if current_span_num == 0:
-                loc = current_span.len_prev_spans
-                left_end_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
             else:
-                left_end_top_bars = '-'
+                if current_span_num == 0:
+                    loc = current_span.len_prev_spans
+                    left_end_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
+                else:
+                    left_end_top_bars = '-'
 
-            loc = current_span.mid_span_loc
-            center_bottom_bars = schedule_bot_rebar(beam_run_info, loc, current_span)
+                loc = current_span.mid_span_loc
+                center_bottom_bars = schedule_bot_rebar(beam_run_info, loc, current_span)
 
-            loc = current_span.len_prev_spans + current_span.length
-            right_end_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
-        schedule_values.append([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars])
+                loc = current_span.len_prev_spans + current_span.length
+                right_end_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
+
+            # check if the item youre about to schedule is already in there. If it is, then assign the span's sched number to that gb number
+            # Gb1 corresponds to schedule_values[0] which is why you add one to the index
+            try:
+                current_span.sched_num = schedule_values.index([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars]) + 1
+
+            # if it isn't in the list, add it to the list and assign the sched num to the length of the list
+            except:
+                schedule_values.append([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars])
+                current_span.sched_num = len(schedule_values)
     
     return schedule_values
 
@@ -102,7 +152,6 @@ def get_rebar_at_location(rebar_list, loc):
     return elements
 
 def end_of_beam_shapes(L1_req_len, loc, current_span, bar):
-    print('end of beam shapes')
     half_L1_plus_15_bar_diam = .5*current_span.length + 15 * bar.bar_diameter / 12
     one_third_L1 = .33 * current_span.length
     one_fourth_L1 = .25 * current_span.length

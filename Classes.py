@@ -7,12 +7,13 @@ class BeamRunInfo:
         self.bot_rebar = []
         self.rebar_req = []
         self.original_rebar_req = []
+        self.top_rebar_designed = False
         self.all_spans_len = 0
         self.max_beam_depth = 0
         self.max_rebar_area = 0
 
     def get_rebar_req_info(self):
-        print('  location, top_selected_area, bot_selected_area')
+        print('  location, top_selected_area, bot_selected_area, span')
         for x in range(len(self.rebar_req)):
             print('    ', x, round(self.rebar_req[x][0],2), ', ', self.rebar_req[x][1], ', ', self.rebar_req[x][2], ', ', self.rebar_req[x][3])
 
@@ -94,6 +95,7 @@ class SingleSpan:
         self.mid_span_loc = mid_span_loc
         self.prev_span_len = prev_span_len
         self.next_span_len = next_span_len
+        self.sched_num = 0
         self.fc = fc
         self.cover_bot = cover_bot
         self.cover_top = cover_top

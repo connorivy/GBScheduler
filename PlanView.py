@@ -1,5 +1,6 @@
 from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, FLAT, LEFT
 from Classes import RevGB
+from schedule_rebar import create_gb_sched
 import os
 
 class PlanView(Frame):
@@ -78,22 +79,20 @@ class PlanView(Frame):
         # save the directory of the runs in the controller
         self.controller.shared_data['directory'] = self.filename
         # get name of all folders in directory
-        run_names = next(os.walk(self.filename))[1]
+        self.run_names = next(os.walk(self.filename))[1]
         self.beam_run_info_all = {}
-        for run in run_names:
-            print('hey')
-            # self.beam_run_info_all[run] = create_beam_run_obj(self.filename + '/' + run + '/report.xls')
+        # for run in self.run_names:
+        #     print('hey')
+        #     # self.beam_run_info_all[run] = create_beam_run_obj(self.filename + '/' + run + '/report.xls')
 
+        self.draw_run_btn_screen()
         self.run_btns = {}
         self.run_btn_flags = {}
         self.assign_beams_to_run_flag = False
-        for run in range(len(run_names)):
-            self.run_btns[run_names[run]] = Button(self.toolbar, text = run_names[run], command=lambda run_name = run_names[run]: self.run_btn_pushed(self.run_btns[run_name]))
-            self.run_btns[run_names[run]].place(relheight = 0.9, relwidth = 0.05, relx = 0.215 + .055*run, rely = 0.05)
-            self.run_btn_flags[run_names[run]] = False
-
-        btn = Button(self.toolbar, text = 'Assign Beams to Run', command=lambda: self.assign_beams_to_run(btn))
-        btn.place(relheight = 0.9, relwidth = 0.05, relx = 0.06, rely = 0.05)
+        for run in range(len(self.run_names)):
+            self.run_btns[self.run_names[run]] = Button(self.run_btn_screen, text = self.run_names[run], command=lambda run_name = self.run_names[run]: self.run_btn_pushed(self.run_btns[run_name]))
+            self.run_btns[self.run_names[run]].place(relheight = 0.1, relwidth = 0.9, relx = .05, rely = .005 + .105*run)
+            self.run_btn_flags[self.run_names[run]] = False
 
 
     def assign_beams_to_run(self, btn):
@@ -157,7 +156,8 @@ class PlanView(Frame):
 
     def draw_plan_view_toolbar(self):
         self.toolbar = Frame(self, bg = 'dark gray')
-        self.toolbar.place(relheight = 0.08, relwidth = 1, relx = 0, rely = 0)
+        self.toolbar_height = .08
+        self.toolbar.place(relheight = self.toolbar_height, relwidth = 1, relx = 0, rely = 0)
 
         b1 = Button(
         self.toolbar,
@@ -166,3 +166,31 @@ class PlanView(Frame):
         text="Browse",
         command= self.fileDialog)
         b1.place(relheight = .9, relwidth = 0.05, relx = .005, rely = 0.05)
+
+        b2 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text='Assign Beams \nto Run',
+        command= lambda: self.assign_beams_to_run(b2))
+        b2.place(relheight = 0.9, relwidth = 0.05, relx = 0.06, rely = 0.05)
+
+        b3 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text='Hide / Unhide \nFolders',
+        command= lambda: self.assign_beams_to_run(b2))
+        b3.place(relheight = 0.9, relwidth = 0.05, relx = 0.115, rely = 0.05)
+
+        b4 = Button(
+        self.toolbar,
+        relief=FLAT,
+        compound = LEFT,
+        text='Create Schedule',
+        command= lambda: create_gb_sched(self.filename, self.run_names))
+        b4.place(relheight = 0.9, relwidth = 0.05, relx = 0.17, rely = 0.05)
+
+    def draw_run_btn_screen(self):
+        self.run_btn_screen = Frame(self, bg = 'dark gray')
+        self.run_btn_screen.place(relheight = 1 - self.toolbar_height, relwidth = .1, relx = 1 - .1, rely = self.toolbar_height)

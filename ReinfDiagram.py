@@ -1,4 +1,4 @@
-from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, Label, FLAT, LEFT, TOP, ttk, Scrollbar, VERTICAL, RIGHT, Y, CENTER
+from tkinter import Canvas, Frame, BOTH, Button, FLAT, LEFT, TOP, ttk, Scrollbar, VERTICAL, CENTER, font
 from Classes import BeamRunInfo, ParametersDefinedByUser
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -36,11 +36,11 @@ class ReinfDiagram(Frame):
         self.top_of_sched_x0 = .05
         self.top_of_sched_y0 = self.toolbar_height + .01
         self.top_of_sched_width = .8
-        self.top_of_sched_height = .25
+        self.top_of_sched_height = .20
 
         self.table_x0 = .05
-        self.table_y0 = self.top_of_sched_y0 + self.top_of_sched_height
-        self.table_width = .801
+        self.table_y0 = self.top_of_sched_y0 + self.top_of_sched_height + .02
+        self.table_width = .8 + .015
         self.table_height = .3
 
         self.controller = controller
@@ -63,9 +63,11 @@ class ReinfDiagram(Frame):
 
             define_long_rebar(wb, beam_run_info)  
             add_min_reinf(beam_run_info)
+
+
             reinf_for_max_area(beam_run_info,user_input)
-            assign_from_bar_schedule(beam_run_info)
-            update_req_areas(beam_run_info)
+            # assign_from_bar_schedule(beam_run_info)
+            beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
 
             self.draw_reinf_diag_toolbar(beam_run_info, user_input)
 
@@ -163,7 +165,7 @@ class ReinfDiagram(Frame):
         self.canvas.delete("all")
 
         reinf_for_max_area(beam_run_info,user_input)
-        update_req_areas(beam_run_info)
+        beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
 
         self.draw_reinf_diagram(beam_run_info)
 
@@ -175,7 +177,7 @@ class ReinfDiagram(Frame):
 
         add_min_reinf(beam_run_info)
         reinf_for_max_area(beam_run_info,user_input)
-        update_req_areas(beam_run_info)
+        beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
 
         self.draw_reinf_diagram(beam_run_info)
 
@@ -227,7 +229,7 @@ class ReinfDiagram(Frame):
         relief=FLAT,
         compound = LEFT,
         text="Reset",
-        command= lambda: lambda:self.reset(beam_run_info,user_input))
+        command= lambda: self.reset(beam_run_info,user_input))
         b3.place(relheight = .9, relwidth = 0.05, relx = .115, rely = 0.05)
 
         b4 = Button(
@@ -235,7 +237,7 @@ class ReinfDiagram(Frame):
         relief=FLAT,
         compound = LEFT,
         text="Schedule",
-        command= lambda: lambda:self.add_rebar_to_global_schedule(beam_run_info))
+        command= lambda: self.add_rebar_to_global_schedule(beam_run_info))
         b4.place(relheight = .9, relwidth = 0.05, relx = .17, rely = 0.05)
 
     def draw_top_of_sched(self):
@@ -247,6 +249,9 @@ class ReinfDiagram(Frame):
         col_width = width / 16
         top_len = .4 * height
         bot_len = height - top_len
+
+        helv36 = font.Font(size=36, weight='bold')
+        helv20 = font.Font(size=20)
 
 
         # border starting with left vertical and going clockwise
@@ -274,9 +279,9 @@ class ReinfDiagram(Frame):
         # last half sized line
         self.canvas.create_line(x0 + 15 * col_width, y0 + top_len, x0 + 15 * col_width, y0 + height)
 
-        self.canvas.create_text(x0 + width/2, y0 + top_len / 2, text = "CONCRETE GRADE BEAM SCHEDULE", justify = CENTER)
-        self.canvas.create_text(x0 + 7 * col_width, y0 + top_len + bot_len / 4, text = "MILD REINFORCING", justify = CENTER)
-        self.canvas.create_text(x0 + 13 * col_width, y0 + top_len + bot_len / 4, text = "STIRRUPS", justify = CENTER)
+        self.canvas.create_text(x0 + width/2, y0 + top_len / 2, text = "CONCRETE GRADE BEAM SCHEDULE", justify = CENTER, font=helv36)
+        self.canvas.create_text(x0 + 7 * col_width, y0 + top_len + bot_len / 4, text = "MILD REINFORCING", justify = CENTER, font=helv20)
+        self.canvas.create_text(x0 + 13 * col_width, y0 + top_len + bot_len / 4, text = "STIRRUPS", justify = CENTER, font=helv20)
         self.canvas.create_text(x0 + col_width / 2, y0 + top_len + bot_len / 2, text = "MARK", justify = CENTER)
         self.canvas.create_text(x0 + 1 * col_width + col_width / 2, y0 + top_len + bot_len / 2, text = "WIDTH\n(IN.)", justify = CENTER)
         self.canvas.create_text(x0 + 2 * col_width + col_width / 2, y0 + top_len + bot_len / 2, text = "DEPTH\n(IN.)", justify = CENTER)
