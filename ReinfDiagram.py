@@ -48,44 +48,30 @@ class ReinfDiagram(Frame):
 
 
     def setup_when_clicked(self):
-        file = self.controller.shared_data['directory'] + '/' + self.controller.shared_data['current_file'] + '/' + 'report.xls'
+        print(self.controller.all_beam_runs.keys())
+        file = self.controller.shared_data['current_file']
+        beam_run_info = self.controller.all_beam_runs[file]
+        beam_run_info.get_top_rebar_info()
+        user_input = self.controller.user_input
         print(file)
-        if self.controller.shared_data['directory']:
-            wb = xlrd.open_workbook(file)
-            beam_run_info = BeamRunInfo()
-            
-            beam_run_info.spans, beam_run_info.all_spans_len = define_spans(wb)
 
-            # create user input and use it to define stuff (specifically min num bars)
-            user_input = ParametersDefinedByUser(fc = 4000, fy = 60000)
-            for span in beam_run_info.spans:
-                span.get_min_num_bars(user_input)
+        self.draw_reinf_diag_toolbar(beam_run_info, user_input)
 
-            define_long_rebar(wb, beam_run_info)  
-            add_min_reinf(beam_run_info)
+        table_params = [self.table_width, self.table_height, self.table_x0, self.table_y0]
+        
+        self.draw_top_of_sched()
+        self.table = PageTwo(self, self.controller, table_params[0], table_params[1], table_params[2], table_params[3])
+        # self.table.place(relwidth = self.usable_screenwidth, relheight = 0.5 * self.usable_screenheight, relx = 0.1, rely = 0.2)
+        # self.create_back_btn(beam_run_info)
+        # self.add_update_btn(beam_run_info,user_input)
+        # self.add_reset_btn(beam_run_info,user_input)
+        # self.add_sched_btn(beam_run_info)
+        self.draw_reinf_diagram(beam_run_info)
 
+        # self.table = PageTwo(self, self.controller)
+        # self.table.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
 
-            reinf_for_max_area(beam_run_info,user_input)
-            # assign_from_bar_schedule(beam_run_info)
-            beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
-
-            self.draw_reinf_diag_toolbar(beam_run_info, user_input)
-
-            table_params = [self.table_width, self.table_height, self.table_x0, self.table_y0]
-            
-            self.draw_top_of_sched()
-            self.table = PageTwo(self, self.controller, table_params[0], table_params[1], table_params[2], table_params[3])
-            # self.table.place(relwidth = self.usable_screenwidth, relheight = 0.5 * self.usable_screenheight, relx = 0.1, rely = 0.2)
-            # self.create_back_btn(beam_run_info)
-            # self.add_update_btn(beam_run_info,user_input)
-            # self.add_reset_btn(beam_run_info,user_input)
-            # self.add_sched_btn(beam_run_info)
-            self.draw_reinf_diagram(beam_run_info)
-
-            # self.table = PageTwo(self, self.controller)
-            # self.table.place(relwidth = 0.8, relheight = 0.5, relx = 0.1, rely = 0.2)
-
-            self.canvas.place(relwidth = 1, relheight = 1, relx = 0, rely = 0)
+        self.canvas.place(relwidth = 1, relheight = 1, relx = 0, rely = 0)
 
     def draw_reinf_diagram(self, beam_run_info):
 

@@ -17,6 +17,10 @@ class BeamRunInfo:
         for x in range(len(self.rebar_req)):
             print('    ', x, round(self.rebar_req[x][0],2), ', ', self.rebar_req[x][1], ', ', self.rebar_req[x][2], ', ', self.rebar_req[x][3])
 
+    def get_top_rebar_info(self):
+        for x in self.top_rebar:
+            x.get_rebar_info()
+
     def get_span_num(self, loc):
         for index in range(len(self.spans)-1):
             if loc < self.spans[index].len_prev_spans:
@@ -42,11 +46,13 @@ class RebarElement:
         self.a_required = a_required
         self.bar_size = bar_size
         self.start_loc = start_loc
+        self.unscheduled_start_loc = start_loc
         self.end_loc = end_loc
         self.num_bars = num_bars
         self.min_num_bars = min_num_bars
         self.idnum = idnum
         self.rebar_subtracted = False
+        self.scheduled = False
         self.a_from_smaller = 0
         self.scheduled_shape = 'None'
         self.span_nums = []
@@ -104,8 +110,6 @@ class SingleSpan:
         self.bot_rebar_req = []
         self.original_top_rebar_req = []
         self.original_bot_rebar_req = []
-        self.top_rebar_elements = []
-        self.bot_rebar_elements = []
         self.stirrups = None
 
     def get_span_info(self):

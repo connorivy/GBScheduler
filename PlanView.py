@@ -1,6 +1,7 @@
 from tkinter import Tk, Canvas, Frame, BOTH, Button, filedialog, FLAT, LEFT
 from Classes import RevGB
-from schedule_rebar import create_gb_sched
+from schedule_rebar import create_gb_sched, schedule_rebar
+from write_to_excel import write_to_excel
 import os
 
 class PlanView(Frame):
@@ -154,6 +155,11 @@ class PlanView(Frame):
         for line in self.gb_lines:
                 self.canvas.itemconfig(line, state='disabled')
 
+    def create_schedule(self):
+        self.controller.all_beam_runs = create_gb_sched(self.filename, self.run_names)
+        values = schedule_rebar(self.controller.all_beam_runs)
+        write_to_excel(values)
+
     def draw_plan_view_toolbar(self):
         self.toolbar = Frame(self, bg = 'dark gray')
         self.toolbar_height = .08
@@ -188,7 +194,7 @@ class PlanView(Frame):
         relief=FLAT,
         compound = LEFT,
         text='Create Schedule',
-        command= lambda: create_gb_sched(self.filename, self.run_names))
+        command = lambda: self.create_schedule())
         b4.place(relheight = 0.9, relwidth = 0.05, relx = 0.17, rely = 0.05)
 
     def draw_run_btn_screen(self):

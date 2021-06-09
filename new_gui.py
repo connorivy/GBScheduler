@@ -6,7 +6,7 @@ import os
 from PlanView import PlanView
 from ReinfDiagram import ReinfDiagram
 
-from Classes import BeamRunInfo, RevGB
+from Classes import ParametersDefinedByUser, BeamRunInfo, RevGB
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
 from update_rebar import assign_from_bar_schedule, update_req_areas
@@ -18,6 +18,10 @@ class GUI(Tk):
 
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
+
+
+        self.all_beam_runs = {}
+        self.user_input = ParametersDefinedByUser(fc = 4000, fy = 60000)
 
         self.shared_data = {
             'directory'     : '',

@@ -29,21 +29,25 @@ def create_gb_sched(filename, run_names):
             add_min_reinf(beam_run_info)
 
             loops = 0
-            while not beam_run_info and loops < 25:
+            while not beam_run_info.top_rebar_designed and loops < 25:
                 loops += 1
                 reinf_for_max_area(beam_run_info,user_input)
                 beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
 
+            print('loops = ', loops)
+
+            for rebar_element in beam_run_info.top_rebar:
+                rebar_element.unscheduled_start_loc = rebar_element.start_loc
             all_beam_runs[run] = beam_run_info
 
-    values = schedule_rebar(all_beam_runs)
-    write_to_excel(values)
+    return all_beam_runs
 
 def schedule_rebar(all_beam_runs):
     # print('schedule rebar')
     schedule_values = []
     for key in all_beam_runs.keys():
         beam_run_info = all_beam_runs[key]
+        print(beam_run_info.get_rebar_req_info())
         num_spans = len(beam_run_info.spans)
         center_top_bars = '-'
         center_bottom_bars = '-'
@@ -70,6 +74,8 @@ def schedule_rebar(all_beam_runs):
                 loc = current_span.len_prev_spans + current_span.length
                 right_end_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
 
+                print([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars])
+
             # check if the item youre about to schedule is already in there. If it is, then assign the span's sched number to that gb number
             # Gb1 corresponds to schedule_values[0] which is why you add one to the index
             try:
@@ -87,9 +93,12 @@ def schedule_top_rebar(beam_run_info, loc, current_span):
     rebar_elements = get_rebar_at_location(beam_run_info.top_rebar, loc)
     top_bars = []
     for bar in rebar_elements:
+        # if the bar has already been scheduled, then move on to the next one
+        if bar.scheduled:
+            continue
         first_span_req_len = min(bar.end_loc - loc, current_span.length / 2)
         L3_req_len = bar.end_loc - loc
-        L1_req_len = loc - bar.start_loc
+        L1_req_len = loc - bar.unscheduled_start_loc
 
         # if only one span
         if current_span.prev_span_len == 0 and current_span.next_span_len == 0:
@@ -116,12 +125,12 @@ def schedule_bot_rebar(beam_run_info, loc, current_span):
     bot_bars = []
     for bar in rebar_elements:
         
-        L2_req_len = max(loc - bar.start_loc - current_span.length / 2, 0)
+        L2_req_len = max(loc - bar.unscheduled_start_loc - current_span.length / 2, 0)
         L3_req_len = max(bar.end_loc - loc - current_span.length / 2, 0)
-        L1_back = min(current_span.length / 2, loc - bar.start_loc)
+        L1_back = min(current_span.length / 2, loc - bar.unscheduled_start_loc)
         L1_front = min(current_span.length / 2, bar.end_loc - loc)
 
-        print(bar.start_loc, bar.end_loc, bar.num_bars)
+        print(bar.unscheduled_start_loc, bar.end_loc, bar.num_bars)
         print(L1_front,L3_req_len)
 
         # if only one span
@@ -146,7 +155,7 @@ def get_rebar_at_location(rebar_list, loc):
     # print('get_rebar_at_location')
     elements = []
     for bar in rebar_list:
-        if bar.start_loc <= loc <= bar.end_loc:
+        if bar.unscheduled_start_loc <= loc <= bar.end_loc:
             elements.append(bar)
 
     return elements
@@ -260,21 +269,20 @@ def get_shape(shapes, bar, loc, len_back_req=0, len_front_req=0, default=[]):
     except:
         print('bar %d continues into more spans' %(bar.idnum))
 
-        bar.start_loc = loc + default[2]
+        bar.unscheduled_start_loc = loc + default[2]
         bar.scheduled_shape = default[0]
 
         return [bar.num_bars, bar.bar_size, bar.scheduled_shape]
 
-    if loc - bar.start_loc > len_back:
+    if loc - bar.unscheduled_start_loc > len_back:
         print('bar %d doesnt reach back enough. This is a problem' %(bar.idnum))
-        # bar.start_loc += min_len
+        # bar.unscheduled_start_loc += min_len
     elif bar.end_loc - loc > len_front:
         print('bar %d continues into more spans' %(bar.idnum))
-        bar.start_loc = loc + len_front
+        bar.unscheduled_start_loc = loc + len_front
     else:
         print('bar %d is scheduled' %(bar.idnum))
-        bar.start_loc = 0
-        bar.end_loc = 0 
+        bar.scheduled = True
 
     # print('%d-%d-%s'  %(bar.num_bars, bar.bar_size, bar.scheduled_shape))
     return [bar.num_bars, bar.bar_size, bar.scheduled_shape]
