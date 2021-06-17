@@ -21,6 +21,7 @@ class GUI(Tk):
 
 
         self.all_beam_runs = {}
+        self.schedule_entries = {}
         self.user_input = ParametersDefinedByUser(fc = 4000, fy = 60000)
 
         self.shared_data = {
@@ -90,7 +91,7 @@ class PageTwo(tk.Frame):
         button.pack()
 
 
-def create_menu(appl):
+def create_menu(app):
     # create menu bar
     menu_bar = Menu(app)
     app.config(menu=menu_bar)

@@ -157,8 +157,8 @@ class PlanView(Frame):
 
     def create_schedule(self):
         self.controller.all_beam_runs = create_gb_sched(self.filename, self.run_names)
-        values = schedule_rebar(self.controller.all_beam_runs)
-        write_to_excel(values)
+        self.controller.schedule_entries = schedule_rebar(self.controller.all_beam_runs)
+        write_to_excel(self.controller.schedule_entries)
 
     def draw_plan_view_toolbar(self):
         self.toolbar = Frame(self, bg = 'dark gray')

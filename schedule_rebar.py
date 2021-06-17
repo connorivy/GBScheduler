@@ -44,11 +44,14 @@ def create_gb_sched(filename, run_names):
 
 def schedule_rebar(all_beam_runs):
     # print('schedule rebar')
-    schedule_values = []
+    schedule_entries = {}
+    gb_num = 1
     for key in all_beam_runs.keys():
         beam_run_info = all_beam_runs[key]
         print(beam_run_info.get_rebar_req_info())
         num_spans = len(beam_run_info.spans)
+        left_end_top_bars = '-'
+        right_end_top_bars = '-'
         center_top_bars = '-'
         center_bottom_bars = '-'
 
@@ -74,19 +77,23 @@ def schedule_rebar(all_beam_runs):
                 loc = current_span.len_prev_spans + current_span.length
                 right_end_top_bars = schedule_top_rebar(beam_run_info, loc, current_span)
 
-                print([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars])
+            potential_entry = [current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars]
 
             # check if the item youre about to schedule is already in there. If it is, then assign the span's sched number to that gb number
-            # Gb1 corresponds to schedule_values[0] which is why you add one to the index
-            try:
-                current_span.sched_num = schedule_values.index([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars]) + 1
+            # Gb1 corresponds to schedule_entries[0] which is why you add one to the index
 
-            # if it isn't in the list, add it to the list and assign the sched num to the length of the list
-            except:
-                schedule_values.append([current_span.width, current_span.depth, left_end_top_bars, center_bottom_bars, center_top_bars, right_end_top_bars])
-                current_span.sched_num = len(schedule_values)
+            for num, entry in schedule_entries.items():
+                if entry == potential_entry:
+                    current_span.sched_num = num
+                    break
+
+            # if it isn't in the list, add it to the list, assign the sched num, and increment the num       
+            if not current_span.sched_num:
+                schedule_entries[gb_num] = potential_entry
+                current_span.sched_num = gb_num
+                gb_num += 1
     
-    return schedule_values
+    return schedule_entries
 
 def schedule_top_rebar(beam_run_info, loc, current_span):
     # print('schedule_top_rebar')

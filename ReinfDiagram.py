@@ -1,4 +1,5 @@
-from tkinter import Canvas, Frame, BOTH, Button, FLAT, LEFT, TOP, ttk, Scrollbar, VERTICAL, CENTER, font
+from tkinter import Canvas, Frame, BOTH, Button, FLAT, LEFT, StringVar, TOP, ttk, Scrollbar, VERTICAL, CENTER, font, Toplevel, Label, ttk, Entry, END
+from tkinter.constants import DISABLED
 from Classes import BeamRunInfo, ParametersDefinedByUser
 from create_spans import define_spans, define_long_rebar, is_num
 from intial_long_rebar_design import add_min_reinf, reinf_for_max_area
@@ -16,11 +17,12 @@ class ReinfDiagram(Frame):
         Frame.__init__(self, parent)
 
         pad = 0
-        self.screenwidth = self.winfo_screenwidth()-pad
+        self.controller = controller
+        self.controller.screenwidth = self.winfo_screenwidth()-pad
         self.screenheight = self.winfo_screenheight()-pad
-        # self.usable_screenwidth =       float(self.screenwidth * .8)
+        # self.usable_screenwidth =       float(self.controller.screenwidth * .8)
         # self.usable_screenheight =      float(self.screenheight * .92)
-        # self.screenwidth_padding =      float(self.screenwidth * .05)
+        # self.controller.screenwidth_padding =      float(self.controller.screenwidth * .05)
         # self.screenheight_padding =     float(self.screenheight * .05)
 
         self.toolbar_x0 = 0
@@ -35,7 +37,7 @@ class ReinfDiagram(Frame):
 
         self.top_of_sched_x0 = .05
         self.top_of_sched_y0 = self.toolbar_height + .01
-        self.top_of_sched_width = .8
+        self.controller.top_of_sched_width = .8
         self.top_of_sched_height = .20
 
         self.table_x0 = .05
@@ -75,8 +77,8 @@ class ReinfDiagram(Frame):
 
     def draw_reinf_diagram(self, beam_run_info):
 
-        spans_length_on_screen = self.diagram_width * self.screenwidth
-        length_along_screen = self.diagram_x0 * self.screenwidth
+        spans_length_on_screen = self.diagram_width * self.controller.screenwidth
+        length_along_screen = self.diagram_x0 * self.controller.screenwidth
 
         top = self.diagram_y0 * self.screenheight
         bot = top + self.diagram_height * self.screenheight
@@ -107,7 +109,7 @@ class ReinfDiagram(Frame):
 
         # draw little lines representing rebar required
         for rebar_req in beam_run_info.original_rebar_req:
-            tick_left = self.diagram_x0 * self.screenwidth + spans_length_on_screen * rebar_req[0] / beam_run_info.all_spans_len
+            tick_left = self.diagram_x0 * self.controller.screenwidth + spans_length_on_screen * rebar_req[0] / beam_run_info.all_spans_len
             tick_top = mid - (mid - top) * rebar_req[1] / beam_run_info.max_rebar_area
             tick_bot = mid + (mid - top) * rebar_req[2] / beam_run_info.max_rebar_area
             self.canvas.create_line(tick_left, tick_top, tick_left, tick_bot)
@@ -115,8 +117,8 @@ class ReinfDiagram(Frame):
         self.draw_rebar(beam_run_info, mid)       
 
     def draw_rebar(self, beam_run_info, mid):
-        length_along_screen = self.diagram_x0 * self.screenwidth
-        spans_length_on_screen = self.diagram_width * self.screenwidth
+        length_along_screen = self.diagram_x0 * self.controller.screenwidth
+        spans_length_on_screen = self.diagram_width * self.controller.screenwidth
         half_diagram_height = self.diagram_height * self.screenheight * .5
 
         top_rebar_elements = beam_run_info.top_rebar
@@ -128,14 +130,37 @@ class ReinfDiagram(Frame):
             y_dim = mid - half_diagram_height * (element.a_provided + element.a_from_smaller)/ beam_run_info.max_rebar_area
             line = self.canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 4, fill="Black", activefill="Red")
             
-            self.canvas.tag_bind(line, '<ButtonPress-1>', lambda event, element = element: self.on_click(event, element))
+            self.canvas.tag_bind(line, '<ButtonPress-1>', lambda event, element = element: self.disp_rebar_info(event, element))
             self.canvas.place()
 
             element.drawn = True
 
-    def on_click(self, event, element):
-        print('\n\n\n')
-        element.get_rebar_info()
+    def disp_rebar_info(self, event, element):
+        win = Toplevel()
+        win.wm_title("Rebar Info")
+
+        # Make topLevelWindow remain on top until destroyed, or attribute changes.
+        win.attributes('-topmost', 'true')
+
+        l1 = ttk.Label(win, text="Size").grid(row=0, column=0)
+        bar_size = StringVar(win, value = element.bar_size)
+        e1 = Entry(win, textvariable = bar_size, state='disabled').grid(row=0, column=1)
+
+        l2 = Label(win, text="Quantity").grid(row=1, column=0)
+        num_bars = StringVar(win, value = element.num_bars)
+        e2 = Entry(win, textvariable = num_bars , state='disabled').grid(row=1, column=1)
+
+
+        l3 = Label(win, text="Start Location").grid(row=2, column=0)
+        start_loc = StringVar(win, value = element.start_loc)
+        e3 = Entry(win, textvariable=start_loc, state='disabled').grid(row=2, column=1)
+
+        l4 = Label(win, text="End Location").grid(row=3, column=0)
+        end_loc = StringVar(win, value = element.end_loc)
+        e4 = Entry(win, textvariable=end_loc, state='disabled').grid(row=3, column=1)
+
+        b = ttk.Button(win, text="Okay", command=win.destroy)
+        b.grid(row=4, column=0)
 
     # def add_reset_btn(self, beam_run_info, user_input):
     #     self.update_btn = Button(self, text="RESET", command = lambda:self.reset(beam_run_info,user_input))
@@ -227,9 +252,9 @@ class ReinfDiagram(Frame):
         b4.place(relheight = .9, relwidth = 0.05, relx = .17, rely = 0.05)
 
     def draw_top_of_sched(self):
-        x0 = self.top_of_sched_x0 * self.screenwidth
+        x0 = self.top_of_sched_x0 * self.controller.screenwidth
         y0 = self.top_of_sched_y0 * self.screenheight
-        width = self.top_of_sched_width * self.screenwidth
+        width = self.controller.top_of_sched_width * self.controller.screenwidth
         height = self.top_of_sched_height * self.screenheight
 
         col_width = width / 16
@@ -286,12 +311,15 @@ class PageTwo(Frame):
         super().__init__()
         Frame.__init__(self, parent)
         self.controller = controller
+
+        col_width = int((self.controller.top_of_sched_width * self.controller.screenwidth) / 16)
+        cols = [1,2,3,4,5,6,7,8,9,10,11]
         
         f = Frame(self.master, bg = 'pink')
         f.place(relwidth = width, relheight = height, relx = x, rely = y)
         # f.pack(side=TOP)
 
-        tv = ttk.Treeview(f, columns=(1,2,3,4,5,6,7,8,9,10,11), show='tree')
+        tv = ttk.Treeview(f, columns=cols, show="tree")
         tv.place(relwidth = 1, relheight = 1, relx = 0, rely = 0)
 
         sb = Scrollbar(f, orient=VERTICAL)
@@ -300,30 +328,22 @@ class PageTwo(Frame):
         tv.config(yscrollcommand=sb.set)
         sb.config(command=tv.yview)
 
+        for i in cols:
+            tv.heading(column=f'{i}',text=f'{i}',anchor='w')
+            if 3 < i < 8 or i == 10:
+                tv.column(column=f'{i}', width=2*col_width, stretch=False, anchor='center')
+            else:
+                tv.column(column=f'{i}', width=col_width, stretch=False, anchor='center')
 
-        tv.column("#0",minwidth=0,width=50)
-        tv.insert(parent='', index=0, iid=0, values=("vineet", "e11", 1000000.00))
-        tv.insert(parent='', index=1, iid=1, values=("anil", "e12", 120000.00))
-        tv.insert(parent='', index=2, iid=2, values=("ankit", "e13", 41000.00))
-        tv.insert(parent='', index=3, iid=3, values=("Shanti", "e14", 22000.00))
-        tv.insert(parent='', index=4, iid=4, values=("vineet", "e11", 1000000.00))
-        tv.insert(parent='', index=5, iid=5, values=("anil", "e12", 120000.00))
-        tv.insert(parent='', index=6, iid=6, values=("ankit", "e13", 41000.00))
-        tv.insert(parent='', index=7, iid=7, values=("Shanti", "e14", 22000.00))
-        tv.insert(parent='', index=8, iid=8, values=("vineet", "e11", 1000000.00))
-        tv.insert(parent='', index=9, iid=9, values=("anil", "e12", 120000.00))
-        tv.insert(parent='', index=10, iid=10, values=("ankit", "e13", 41000.00))
-        tv.insert(parent='', index=11, iid=11, values=("Shanti", "e14", 22000.00))
+        tv.column('#0', stretch=False, minwidth=0, width=0)
+
+        for key, item in self.controller.schedule_entries.items():
+            item.insert(0,key)
+            tv.insert(parent='', index=key, values=item)
 
         style = ttk.Style()
         style.theme_use("default")
         style.map("Treeview")
-
-    def update_item(tv):
-            selected = tv.focus()
-            temp = tv.item(selected, 'values')
-            sal_up = float(temp[2]) + float(temp[2]) * 0.05
-            tv.item(selected, values=(temp[0], temp[1], sal_up))
 
 
 
@@ -333,7 +353,7 @@ class PageTwo(Frame):
 #         self.parent = parent
 #         Frame.__init__(self)
 #         self.main = self.master
-#         self.main.geometry("{0}x{1}+0+0".format(self.screenwidth, self.screenheight))
+#         self.main.geometry("{0}x{1}+0+0".format(self.controller.screenwidth, self.screenheight))
 #         self.main.title('Table app')
 #         f = Frame(self.main)
 #         f.pack(fill=BOTH,expand=1)
