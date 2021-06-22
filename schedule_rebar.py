@@ -12,7 +12,7 @@ def create_gb_sched(filename, run_names):
     for run in run_names:
         path = filename + '/' + run
         filenames = glob.glob(path + "/*.xls")
-        print(filenames)
+        # print(filenames)
 
         for file in filenames:
             wb = xlrd.open_workbook(file)
@@ -34,7 +34,7 @@ def create_gb_sched(filename, run_names):
                 reinf_for_max_area(beam_run_info,user_input)
                 beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
 
-            print('loops = ', loops)
+            # print('loops = ', loops)
 
             for rebar_element in beam_run_info.top_rebar:
                 rebar_element.unscheduled_start_loc = rebar_element.start_loc
@@ -48,7 +48,6 @@ def schedule_rebar(all_beam_runs):
     gb_num = 1
     for key in all_beam_runs.keys():
         beam_run_info = all_beam_runs[key]
-        print(beam_run_info.get_rebar_req_info())
         num_spans = len(beam_run_info.spans)
         left_end_top_bars = '-'
         right_end_top_bars = '-'
@@ -118,9 +117,6 @@ def schedule_top_rebar(beam_run_info, loc, current_span):
             top_bars.append(end_of_beam_shapes(L1_req_len, loc, current_span, bar))
         else:
             top_bars.append(over_support_shapes(L1_req_len, L3_req_len, loc, current_span, bar))
-        
-    print(get_schedule_text(top_bars))
-    print()
 
     return get_schedule_text(top_bars)
 
@@ -137,9 +133,6 @@ def schedule_bot_rebar(beam_run_info, loc, current_span):
         L1_back = min(current_span.length / 2, loc - bar.unscheduled_start_loc)
         L1_front = min(current_span.length / 2, bar.end_loc - loc)
 
-        print(bar.unscheduled_start_loc, bar.end_loc, bar.num_bars)
-        print(L1_front,L3_req_len)
-
         # if only one span
         if current_span.prev_span_len == 0 and current_span.next_span_len == 0:
             bot_bars.append([bar.num_bars, bar.bar_size, 'J'])
@@ -151,9 +144,6 @@ def schedule_bot_rebar(beam_run_info, loc, current_span):
             bot_bars.append(end_mid_span_shapes(L1_back, L1_front, L2_req_len, L3_req_len, loc, current_span, bar))
         else:
             bot_bars.append(mid_span_shapes(L1_back, L1_front, L2_req_len, L3_req_len, loc, current_span, bar))
-        
-    print(get_schedule_text(bot_bars))
-    print()
 
     return get_schedule_text(bot_bars)
 
@@ -203,7 +193,7 @@ def over_support_shapes(L1_req_len, L3_req_len, loc, current_span, bar):
     return get_shape(shapes, bar, loc, len_back_req=L1_req_len, len_front_req=L3_req_len, default=A)
 
 def end_mid_span_shapes(L1_back, L1_front, L2_req_len, L3_req_len, loc, current_span, bar):
-    print('end mid_span_shapes')
+    # print('end mid_span_shapes')
     half_curr_span = current_span.length / 2
     one_third_L1_or_L3 = .33 * max(current_span.length, current_span.next_span_len)
     one_half_L3_plus_15_bar_diam = current_span.next_span_len / 2 + 15 * bar.bar_diameter / 12
@@ -230,7 +220,7 @@ def end_mid_span_shapes(L1_back, L1_front, L2_req_len, L3_req_len, loc, current_
     shapes = [D, G, P, T]
 
 def mid_span_shapes(L1_back, L1_front, L2_req_len, L3_req_len, loc, current_span, bar):
-    print('mid_span_shapes')
+    # print('mid_span_shapes')
     half_curr_span = current_span.length / 2
     one_third_L1_or_L2 = .33 * max(current_span.length, current_span.prev_span_len)
     one_third_L1_or_L3 = .33 * max(current_span.length, current_span.next_span_len)
@@ -274,7 +264,7 @@ def get_shape(shapes, bar, loc, len_back_req=0, len_front_req=0, default=[]):
     try:
         dummy = len_back
     except:
-        print('bar %d continues into more spans' %(bar.idnum))
+        # print('bar %d continues into more spans' %(bar.idnum))
 
         bar.unscheduled_start_loc = loc + default[2]
         bar.scheduled_shape = default[0]
@@ -285,10 +275,10 @@ def get_shape(shapes, bar, loc, len_back_req=0, len_front_req=0, default=[]):
         print('bar %d doesnt reach back enough. This is a problem' %(bar.idnum))
         # bar.unscheduled_start_loc += min_len
     elif bar.end_loc - loc > len_front:
-        print('bar %d continues into more spans' %(bar.idnum))
+        # print('bar %d continues into more spans' %(bar.idnum))
         bar.unscheduled_start_loc = loc + len_front
     else:
-        print('bar %d is scheduled' %(bar.idnum))
+        # print('bar %d is scheduled' %(bar.idnum))
         bar.scheduled = True
 
     # print('%d-%d-%s'  %(bar.num_bars, bar.bar_size, bar.scheduled_shape))

@@ -72,7 +72,7 @@ class PlanView(Frame):
             print('A line was clicked without an active flag. This shouldnt happen')
         else:
             self.canvas.itemconfig(gb_line, fill='blue', tags=flag)
-        print('%f %f' %(gb.start_x, gb.start_y))
+        # print('%f %f' %(gb.start_x, gb.start_y))
 
     def fileDialog(self):
         # get the directory of all the gb runs

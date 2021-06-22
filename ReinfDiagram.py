@@ -50,12 +50,12 @@ class ReinfDiagram(Frame):
 
 
     def setup_when_clicked(self):
-        print(self.controller.all_beam_runs.keys())
+        # print(self.controller.all_beam_runs.keys())
         file = self.controller.shared_data['current_file']
         beam_run_info = self.controller.all_beam_runs[file]
         beam_run_info.get_top_rebar_info()
         user_input = self.controller.user_input
-        print(file)
+        # print(file)
 
         self.draw_reinf_diag_toolbar(beam_run_info, user_input)
 
@@ -101,6 +101,10 @@ class ReinfDiagram(Frame):
                 self.canvas.create_line(current_span.right_side_on_screen,bot,current_span.right_side_on_screen - self.screenheight * .02, bot + self.screenheight * .03, width=4)
                 self.canvas.create_line(current_span.right_side_on_screen,bot,current_span.right_side_on_screen + self.screenheight * .02, bot + self.screenheight * .03, width=4)
 
+            # add GB label
+            helv20 = font.Font(size=20)
+            self.canvas.create_text(current_span.left_side_on_screen + .5 * current_span.virt_length, bot + .02 * self.screenheight, text = 'GB' + str(current_span.sched_num), justify = CENTER, font = helv20)
+
             # # draw frame for graph
             # print(current_span.left_side_on_screen, top, current_span.right_side_on_screen, bot)
             self.canvas.create_rectangle(current_span.left_side_on_screen, top, current_span.right_side_on_screen, bot, outline="#000000")
@@ -144,22 +148,22 @@ class ReinfDiagram(Frame):
 
         l1 = ttk.Label(win, text="Size").grid(row=0, column=0)
         bar_size = StringVar(win, value = element.bar_size)
-        e1 = Entry(win, textvariable = bar_size, state='disabled').grid(row=0, column=1)
+        e1 = Entry(win, textvariable = bar_size, state='normal').grid(row=0, column=1)
 
         l2 = Label(win, text="Quantity").grid(row=1, column=0)
         num_bars = StringVar(win, value = element.num_bars)
-        e2 = Entry(win, textvariable = num_bars , state='disabled').grid(row=1, column=1)
+        e2 = Entry(win, textvariable = num_bars , state='normal').grid(row=1, column=1)
 
 
         l3 = Label(win, text="Start Location").grid(row=2, column=0)
         start_loc = StringVar(win, value = element.start_loc)
-        e3 = Entry(win, textvariable=start_loc, state='disabled').grid(row=2, column=1)
+        e3 = Entry(win, textvariable=start_loc, state='normal').grid(row=2, column=1)
 
         l4 = Label(win, text="End Location").grid(row=3, column=0)
         end_loc = StringVar(win, value = element.end_loc)
-        e4 = Entry(win, textvariable=end_loc, state='disabled').grid(row=3, column=1)
+        e4 = Entry(win, textvariable=end_loc, state='normal').grid(row=3, column=1)
 
-        b = ttk.Button(win, text="Okay", command=win.destroy)
+        b = ttk.Button(win, text="Save", command=win.destroy)
         b.grid(row=4, column=0)
 
     # def add_reset_btn(self, beam_run_info, user_input):
@@ -317,7 +321,6 @@ class PageTwo(Frame):
         
         f = Frame(self.master, bg = 'pink')
         f.place(relwidth = width, relheight = height, relx = x, rely = y)
-        # f.pack(side=TOP)
 
         tv = ttk.Treeview(f, columns=cols, show="tree")
         tv.place(relwidth = 1, relheight = 1, relx = 0, rely = 0)
@@ -339,7 +342,13 @@ class PageTwo(Frame):
 
         for key, item in self.controller.schedule_entries.items():
             item.insert(0,key)
-            tv.insert(parent='', index=key, values=item)
+            if key % 2:
+                tv.insert(parent='', index=key, values=item, tags=['oddrow'])
+            else:
+                tv.insert(parent='', index=key, values=item)
+                
+        tv.tag_configure('oddrow', background = 'gray')
+        # tv.tag_configure('oddrow', background = 'dark gray')
 
         style = ttk.Style()
         style.theme_use("default")

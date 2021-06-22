@@ -19,7 +19,11 @@ def add_min_reinf(beam_run_info):
         rebar_req[2] = max(rebar_req[2], current_span.min_num_bars * .44)
 
 def reinf_for_max_area(beam_run_info, user_input):
+    # rebar_req - [[absolute_location, a_top_rebar req at that location, area_bot_rebar req at that location, span number that location belongs to]]
     rebar_req = beam_run_info.rebar_req
+
+    # this returns the maximum area followed by groups of consecutive indexes in which the maximum area occurrs in top_rebar_req
+    # 1.68 , [[19,20,21],[41,42,43],[62,63]]
     max_area, grouped_indices = get_max_area_indices(rebar_req)
     spans = beam_run_info.spans
     group = grouped_indices[0]
@@ -27,7 +31,7 @@ def reinf_for_max_area(beam_run_info, user_input):
     if max_area:
         # for group in grouped_indices:
         start_loc_span = rebar_req[group[0]][3]
-        end_loc_span = rebar_req[group[0]][3]
+        end_loc_span = rebar_req[group[-1]][3]
 
         # set min num bars = to max (min num bar value between the spans of the start and end location)
         min_num_bars = max(spans[start_loc_span].min_num_bars, spans[end_loc_span].min_num_bars)
@@ -38,7 +42,6 @@ def reinf_for_max_area(beam_run_info, user_input):
         end_loc = min(rebar_req[group[-1]][0] + dl, beam_run_info.all_spans_len)
         new_bar = RebarElement(a_required=max_area, start_loc=start_loc, end_loc=end_loc, bar_size=bar_size, num_bars=num_bars, min_num_bars=min_num_bars)
         
-        # beam_run_info.top_rebar.append(new_bar)
         extend_neighbor_bars(new_bar, beam_run_info)
 
 def get_max_area_indices(rebar_req):
@@ -51,21 +54,6 @@ def get_max_area_indices(rebar_req):
     # 1.68 , [[19,20,21],[41,42,43],[62,63]]
     
     return max_area, grouped_indices
-
-# def get_max_area_indices1(rebar_req):
-#     max_top_area = 0
-#     indices = [[]]
-#     for index in range(len(rebar_req)):
-#         temp_max_area = copy.copy(max_top_area)
-#         max_top_area = max(rebar_req[index][1], max_top_area)
-#         if max_top_area != temp_max_area:
-#             indices = [[index]]
-#         elif max_top_area == temp_max_area:
-#             if index - indices[-1][-1] < 5:
-#                 indices[-1].append(index)
-#             else:
-#                 indices.append([index])
-#     return indices
 
 
 def development_len(bar_size, user_input):
@@ -108,15 +96,15 @@ def extend_neighbor_bars(new_bar, beam_run_info):
     # print('extend_neighbor_bars')
     copy_top_rebar_elements = copy.copy(beam_run_info.top_rebar)
     # copy_top_rebar_elements.append(new_bar)
-    copy_top_rebar_elements.sort(key=lambda x: x.start_loc)
+    # copy_top_rebar_elements.sort(key=lambda x: x.start_loc)
     # index_start = copy_top_rebar_elements.index(new_bar)
 
     # surrounding_bars = []
-    vol_diff = []
+    # vol_diff = []
 
     for existing_bar in copy_top_rebar_elements:
         og_volume = existing_bar.get_volume() + new_bar.get_volume()
-        # if existing_bar doesn't overlap the new beam then continue
+        # if existing_bar doesn't overlap the new beam then continue or if the bar already has a bar beneath it
         if existing_bar.end_loc < new_bar.start_loc or existing_bar.start_loc > new_bar.end_loc or existing_bar.a_from_smaller:
             continue
         elif existing_bar.start_loc < new_bar.start_loc and existing_bar.end_loc > new_bar.end_loc:
@@ -129,10 +117,10 @@ def extend_neighbor_bars(new_bar, beam_run_info):
                 new_bar.end_loc = max(existing_bar.end_loc, new_bar.end_loc)
 
                 beam_run_info.top_rebar.remove(existing_bar)
-                continue
+                break
 
             if existing_bar.a_provided > new_bar.a_provided:
-                print(existing_bar.start_loc, existing_bar.end_loc)
+                # print(existing_bar.start_loc, existing_bar.end_loc)
                 smaller_bar = copy.copy(new_bar)
                 larger_bar = copy.copy(existing_bar)
             else:
