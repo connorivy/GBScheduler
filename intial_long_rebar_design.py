@@ -33,6 +33,9 @@ def reinf_for_max_area(beam_run_info, user_input):
     top_max_area, top_grouped_indices = get_max_area_indices(top_rebar_req)
     bot_max_area, bot_grouped_indices = get_max_area_indices(bot_rebar_req)
 
+    print('top', top_max_area, top_grouped_indices)
+    print('bot', bot_max_area, bot_grouped_indices)
+
     spans = beam_run_info.spans
     top_group = top_grouped_indices[0]
     bot_group = bot_grouped_indices[0]

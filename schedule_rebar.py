@@ -29,14 +29,17 @@ def create_gb_sched(filename, run_names):
             add_min_reinf(beam_run_info)
 
             loops = 0
-            while not beam_run_info.top_rebar_designed and loops < 25:
+            while (not beam_run_info.top_rebar_designed or not beam_run_info.bot_rebar_designed) and loops < 25:
                 loops += 1
                 reinf_for_max_area(beam_run_info,user_input)
-                beam_run_info.top_rebar_designed = update_req_areas(beam_run_info)
+                beam_run_info.top_rebar_designed = update_req_areas(beam_run_info.top_rebar, beam_run_info.rebar_req, 1)
+                beam_run_info.bot_rebar_designed = update_req_areas(beam_run_info.bot_rebar, beam_run_info.rebar_req, 2)
 
             # print('loops = ', loops)
 
             for rebar_element in beam_run_info.top_rebar:
+                rebar_element.unscheduled_start_loc = rebar_element.start_loc
+            for rebar_element in beam_run_info.bot_rebar:
                 rebar_element.unscheduled_start_loc = rebar_element.start_loc
             all_beam_runs[run] = beam_run_info
 

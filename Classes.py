@@ -8,6 +8,7 @@ class BeamRunInfo:
         self.rebar_req = []
         self.original_rebar_req = []
         self.top_rebar_designed = False
+        self.bot_rebar_designed = False
         self.all_spans_len = 0
         self.max_beam_depth = 0
         self.max_rebar_area = 0

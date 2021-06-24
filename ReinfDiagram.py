@@ -126,13 +126,26 @@ class ReinfDiagram(Frame):
         half_diagram_height = self.diagram_height * self.screenheight * .5
 
         top_rebar_elements = beam_run_info.top_rebar
-        
+        bot_rebar_elements = beam_run_info.bot_rebar
+
         top_rebar_elements.sort(key=lambda x: x.a_provided)
+        bot_rebar_elements.sort(key=lambda x: x.a_provided)
 
         for element in top_rebar_elements:
             x1_dim = length_along_screen + element.start_loc / beam_run_info.all_spans_len * spans_length_on_screen
             x2_dim = length_along_screen + element.end_loc / beam_run_info.all_spans_len * spans_length_on_screen
             y_dim = mid - half_diagram_height * (element.a_provided + element.a_from_smaller)/ beam_run_info.max_rebar_area
+            line = self.canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 4, fill="Black", activefill="Red")
+            
+            self.canvas.tag_bind(line, '<ButtonPress-1>', lambda event, element = element: self.disp_rebar_info(event, element))
+            self.canvas.place()
+
+            element.drawn = True
+
+        for element in bot_rebar_elements:
+            x1_dim = length_along_screen + element.start_loc / beam_run_info.all_spans_len * spans_length_on_screen
+            x2_dim = length_along_screen + element.end_loc / beam_run_info.all_spans_len * spans_length_on_screen
+            y_dim = mid + half_diagram_height * (element.a_provided + element.a_from_smaller)/ beam_run_info.max_rebar_area
             line = self.canvas.create_line(x1_dim, y_dim, x2_dim, y_dim, width = 4, fill="Black", activefill="Red")
             
             self.canvas.tag_bind(line, '<ButtonPress-1>', lambda event, element = element: self.disp_rebar_info(event, element))
