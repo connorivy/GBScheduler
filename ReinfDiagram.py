@@ -126,6 +126,7 @@ class ReinfDiagram(Frame):
         half_diagram_height = self.diagram_height * self.screenheight * .5
 
         top_rebar_elements = beam_run_info.top_rebar
+        
         top_rebar_elements.sort(key=lambda x: x.a_provided)
 
         for element in top_rebar_elements:
